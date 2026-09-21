@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="description" content="StudyLink conecta estudantes para aprender e ensinar juntos." />
+    <title>StudyLink | Encontre sua parceria de estudo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#inicio" aria-label="StudyLink, início"><span class="brand-mark">S</span>StudyLink</a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav" aria-label="Abrir menu">☰</button>
+      <nav id="site-nav" class="site-nav" aria-label="Navegação principal">
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#encontrar">Encontrar estudantes</a>
+        <a href="#grupos">Grupos</a>
+        <a class="nav-cta" href="#perfil">Ver perfil</a>
+      </nav>
+    </header>
+
+    <main id="inicio">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">StudyLink · MVP</p>
+          <h1>Estudar junto começa com uma boa conexão.</h1>
+          <p>Encontre colegas que estudam a mesma disciplina, compartilhe o que você já domina e forme grupos com objetivos claros.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#encontrar">Encontrar estudantes <span>→</span></a>
+            <a class="button button-secondary" href="#como-funciona">Conhecer o site</a>
+          </div>
+          <div class="hero-proof">
+            <div><strong>3 perfis</strong><span>para cada tipo de necessidade</span></div>
+            <div><strong>2 grupos</strong><span>ativos nesta demonstração</span></div>
+            <div><strong>1 objetivo</strong><span>aprender de forma colaborativa</span></div>
+          </div>
+        </div>
+        <div class="hero-art" aria-label="Exemplo de conexões de estudo">
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+          <article class="floating-card topic-card"><span class="mini-icon">∫</span><div><strong>Cálculo I</strong><small>Limites e derivadas</small></div></article>
+          <article class="floating-card person-card person-one"><span class="avatar teal">LM</span><div><strong>Laura</strong><small>Quero aprender</small></div></article>
+          <article class="floating-card person-card person-two"><span class="avatar purple">RC</span><div><strong>Rafael</strong><small>Posso ajudar</small></div></article>
+          <div class="hero-core"><span>✦</span><strong>Study<br />Link</strong></div>
+          <article class="floating-card match-card"><span>✓</span><div><strong>Boa combinação</strong><small>Mesmo conteúdo</small></div></article>
+        </div>
+      </section>
+
+      <section id="como-funciona" class="section steps-section">
+        <div class="section-intro"><p class="eyebrow">Como funciona</p><h2>O caminho até o seu próximo grupo de estudo.</h2><p>Um fluxo objetivo para que ninguém precise procurar ajuda em grupos genéricos ou depender de conhecer a pessoa certa antes.</p></div>
+        <div class="steps">
+          <article><span class="step-number">01</span><h3>Monte seu perfil</h3><p>Informe instituição, curso, semestre e as disciplinas que fazem parte da sua rotina.</p></article>
+          <article><span class="step-number">02</span><h3>Declare suas intenções</h3><p>Marque os conteúdos em que quer aprender e aqueles em que pode ajudar alguém.</p></article>
+          <article><span class="step-number">03</span><h3>Faça a conexão</h3><p>Encontre estudantes compatíveis ou entre em um grupo com um objetivo definido.</p></article>
+        </div>
+      </section>
+
+      <section id="encontrar" class="section discovery-section">
+        <div class="section-heading"><div><p class="eyebrow">Descubra estudantes</p><h2>Quem pode combinar com seu momento de estudo?</h2><p>Filtre por disciplina e interesse para conhecer os perfis da demonstração.</p></div></div>
+        <div class="discovery-layout">
+          <aside class="filters card">
+            <h3>Refinar busca</h3>
+            <label for="subject-filter">Disciplina</label>
+            <select id="subject-filter"><option value="all">Todas as disciplinas</option><option value="calculo">Cálculo I</option><option value="algoritmos">Algoritmos</option><option value="gestao">Gestão de Projetos</option></select>
+            <label for="intent-filter">O que procura?</label>
+            <select id="intent-filter"><option value="all">Todas as intenções</option><option value="learn">Quem quer aprender</option><option value="help">Quem pode ajudar</option></select>
+            <button id="clear-filters" class="button button-secondary button-small">Limpar filtros</button>
+            <p class="filter-note">Os perfis mostram apenas informações acadêmicas. E-mail e senha nunca ficam visíveis.</p>
+          </aside>
+          <div>
+            <div class="results-heading"><span id="results-count">4 estudantes encontrados</span><span>Atualizado agora</span></div>
+            <div id="student-list" class="student-list"></div>
+            <p id="empty-students" class="empty-state" hidden>Nenhum estudante encontrado. Tente mudar os filtros.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="grupos" class="section groups-section">
+        <div class="section-heading"><div><p class="eyebrow">Grupos de estudo</p><h2>Estude com um objetivo em comum.</h2><p>Conheça os grupos disponíveis ou simule a criação de um novo grupo.</p></div><button class="button button-primary" id="open-group-form">Criar grupo <span>+</span></button></div>
+        <div id="group-form-wrap" class="group-form-wrap" hidden>
+          <form id="group-form" class="group-form card">
+            <div><h3>Novo grupo de estudo</h3><p>Defina uma proposta clara antes de convidar estudantes.</p></div>
+            <label>Nome do grupo<input name="name" maxlength="60" placeholder="Ex.: Revisão de Cálculo I" required /></label>
+            <label>Disciplina<select name="subject" required><option value="">Selecione</option><option>Cálculo I</option><option>Algoritmos</option><option>Gestão de Projetos</option></select></label>
+            <label>Objetivo<textarea name="objective" maxlength="160" placeholder="O que o grupo quer alcançar?" required></textarea></label>
+            <label>Limite de membros<input name="limit" type="number" min="2" max="20" value="5" required /></label>
+            <div class="form-actions"><button class="button button-secondary" type="button" id="cancel-group-form">Cancelar</button><button class="button button-primary" type="submit">Criar grupo</button></div>
+          </form>
+        </div>
+        <div id="group-list" class="group-list"></div>
+      </section>
+
+      <section id="perfil" class="section profile-section">
+        <div class="profile-panel card">
+          <div class="profile-heading"><span class="avatar large purple">ES</span><div><p class="eyebrow">Seu perfil acadêmico</p><h2>Eduardo Schwertz</h2><p>Engenharia de Software · 4º semestre</p></div><button class="button button-secondary button-small" id="edit-profile">Editar perfil</button></div>
+          <div class="profile-grid"><div><h3>Disciplinas</h3><div class="chips"><span class="chip subject-chip">Engenharia de Software</span><span class="chip subject-chip">Banco de Dados</span><span class="chip subject-chip">Algoritmos</span></div></div><div><h3>Conteúdos declarados</h3><div class="chips"><span class="chip help-chip">Posso ajudar: Scrum</span><span class="chip learn-chip">Quero aprender: Modelagem ER</span></div></div></div>
+          <p class="profile-description">Gosto de organizar estudos em grupo e trocar experiências sobre desenvolvimento de software.</p>
+        </div>
+      </section>
+
+      <section class="cta-section"><div><p class="eyebrow">Pronto para conectar?</p><h2>Menos busca, mais aprendizado compartilhado.</h2></div><a class="button button-light" href="#encontrar">Explorar estudantes <span>→</span></a></section>
+    </main>
+
+    <footer><a class="brand" href="#inicio"><span class="brand-mark">S</span>StudyLink</a><p>MVP acadêmico · Engenharia de Software</p><p>Feito para aproximar estudantes.</p></footer>
+    <div id="profile-modal" class="modal-backdrop" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close" aria-label="Fechar">×</button><div id="modal-content"></div></section></div>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <script src="script.js"></script>
+  </body>
+</html>
