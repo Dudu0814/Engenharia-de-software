@@ -19,6 +19,7 @@
         <a href="#como-funciona">Como funciona</a>
         <a href="#encontrar">Encontrar estudantes</a>
         <a href="#grupos">Grupos</a>
+        <a href="#arquitetura">Arquitetura</a>
         <a class="nav-cta" href="#perfil">Ver perfil</a>
       </nav>
     </header>
@@ -26,12 +27,12 @@
     <main id="inicio">
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">StudyLink · MVP</p>
+          <p class="eyebrow">StudyLink · MVP · Sprint 2</p>
           <h1>Estudar junto começa com uma boa conexão.</h1>
           <p>Encontre colegas que estudam a mesma disciplina, compartilhe o que você já domina e forme grupos com objetivos claros.</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#encontrar">Encontrar estudantes <span>→</span></a>
-            <a class="button button-secondary" href="#como-funciona">Conhecer o site</a>
+            <a class="button button-secondary" href="#arquitetura">Ver solução</a>
           </div>
           <div class="hero-proof">
             <div><strong>3 perfis</strong><span>para cada tipo de necessidade</span></div>
@@ -56,6 +57,20 @@
           <article><span class="step-number">02</span><h3>Declare suas intenções</h3><p>Marque os conteúdos em que quer aprender e aqueles em que pode ajudar alguém.</p></article>
           <article><span class="step-number">03</span><h3>Faça a conexão</h3><p>Encontre estudantes compatíveis ou entre em um grupo com um objetivo definido.</p></article>
         </div>
+      </section>
+
+      <section id="arquitetura" class="section architecture-section">
+        <div class="section-heading"><div><p class="eyebrow">Projeto da solução</p><h2>Uma base simples para evoluir com segurança.</h2><p>O site atual funciona como protótipo navegável. A arquitetura da Sprint 2 define como ele evolui para uma plataforma com dados persistentes e regras protegidas no servidor.</p></div></div>
+        <div class="architecture-flow" aria-label="Visão de arquitetura do StudyLink">
+          <article><span class="architecture-icon">◉</span><p class="architecture-label">Pessoa</p><h3>Estudante</h3><p>Descobre colegas, organiza grupos e acompanha solicitações.</p></article>
+          <span class="architecture-arrow" aria-hidden="true">→</span>
+          <article><span class="architecture-icon">⌘</span><p class="architecture-label">Interface web</p><h3>StudyLink no navegador</h3><p>Perfis, busca, grupos e formulários responsivos.</p></article>
+          <span class="architecture-arrow" aria-hidden="true">→</span>
+          <article><span class="architecture-icon">⇄</span><p class="architecture-label">Serviço futuro</p><h3>API do StudyLink</h3><p>Autentica, aplica regras e organiza as conexões.</p></article>
+          <span class="architecture-arrow" aria-hidden="true">→</span>
+          <article><span class="architecture-icon">▣</span><p class="architecture-label">Dados futuros</p><h3>Banco de dados</h3><p>Guarda perfis, conteúdos, grupos e solicitações.</p></article>
+        </div>
+        <div class="architecture-notes"><div><strong>Contexto</strong><span>Estudante, professor e plataforma.</span></div><div><strong>Containers</strong><span>Interface web, API e banco de dados.</span></div><div><strong>Decisões</strong><span>2 ADRs registrados para orientar a evolução.</span></div></div>
       </section>
 
       <section id="encontrar" class="section discovery-section">

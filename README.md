@@ -15,3 +15,12 @@ O site inclui telas navegáveis de descoberta de estudantes, grupos de estudo, p
 - busca de estudantes por disciplina e intenção;
 - criação visual de grupos de estudo;
 - fluxo demonstrativo de solicitação, aprovação e recusa de entrada em grupos.
+
+## Sprint 2 - requisitos e arquitetura
+
+A documentação da solução está em [docs/sprint-2/solucao-documentada.md](docs/sprint-2/solucao-documentada.md). Ela inclui requisitos, protótipo navegável, diagramas C4, fluxo de participação em grupos, modelo de dados e as decisões de arquitetura (ADRs).
+
+As duas decisões registradas são:
+
+- [ADR 001 - Interface web e API REST](docs/sprint-2/adrs/ADR-001-interface-web-e-api-rest.md)
+- [ADR 002 - Solicitações e participações separadas](docs/sprint-2/adrs/ADR-002-solicitacoes-e-participacoes-separadas.md)
