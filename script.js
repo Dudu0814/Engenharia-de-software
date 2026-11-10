@@ -1,3 +1,16 @@
+// Catálogo de cursos e matérias usado nos filtros e formulários.
+const courses = ["Engenharia de Software", "Análise e Desenvolvimento de Sistemas", "Desenvolvimento de Jogos", "Advocacia / Direito", "Psiquiatria / Medicina", "Administração", "Psicologia", "Engenharia Civil", "Ciência da Computação"];
+const subjects = [
+  { id: "calculo", name: "Cálculo I" }, { id: "algoritmos", name: "Algoritmos e Lógica" },
+  { id: "gestao", name: "Gestão de Projetos" }, { id: "banco", name: "Banco de Dados" },
+  { id: "programacao", name: "Programação Web" }, { id: "jogos", name: "Desenvolvimento de Jogos" },
+  { id: "ia", name: "Inteligência Artificial" }, { id: "direito-civil", name: "Direito Civil" },
+  { id: "direito-penal", name: "Direito Penal" }, { id: "constitucional", name: "Direito Constitucional" },
+  { id: "anatomia", name: "Anatomia e Fisiologia" }, { id: "psiquiatria", name: "Psiquiatria" },
+  { id: "psicologia", name: "Psicologia Clínica" }, { id: "estatistica", name: "Estatística" },
+  { id: "fisica", name: "Física I" }, { id: "scrum", name: "Scrum e Métodos Ágeis" }
+];
+
 const students = [
   {
     id: "laura",
@@ -36,6 +49,30 @@ const students = [
     tone: "purple",
   },
   {
+    id: "beatriz",
+    initials: "BA",
+    name: "Beatriz Almeida",
+    course: "Desenvolvimento de Jogos",
+    semester: "3º semestre",
+    bio: "Estou montando meu primeiro jogo e quero trocar ideias sobre lógica e design.",
+    subjects: ["jogos", "algoritmos"],
+    subjectLabels: ["Desenvolvimento de Jogos", "Algoritmos e Lógica"],
+    interests: [{ type: "learn", label: "Quero aprender: Unity e prototipação" }],
+    tone: "purple",
+  },
+  {
+    id: "lucas",
+    initials: "LS",
+    name: "Lucas Silva",
+    course: "Advocacia / Direito",
+    semester: "5º semestre",
+    bio: "Gosto de revisar casos e estudar Direito Civil em grupo.",
+    subjects: ["direito-civil", "constitucional"],
+    subjectLabels: ["Direito Civil", "Direito Constitucional"],
+    interests: [{ type: "help", label: "Posso ajudar: Direito Civil" }],
+    tone: "teal",
+  },
+  {
     id: "mateus",
     initials: "ML",
     name: "Mateus Lima",
@@ -58,8 +95,14 @@ const loadData = (key, fallback) => { try { return JSON.parse(localStorage.getIt
 const saveData = (key, value) => localStorage.setItem(key, JSON.stringify(value));
 let groups = loadData("studylink.groups", initialGroups);
 let requests = loadData("studylink.requests", []);
+let chats = loadData("studylink.chats", {});
 let session = loadData("studylink.session", null);
 const subjectFilter = document.querySelector("#subject-filter");
+const groupSubject = document.querySelector('#group-form select[name="subject"]');
+subjects.forEach((subject) => {
+  subjectFilter.add(new Option(subject.name, subject.id));
+  groupSubject.add(new Option(subject.name, subject.name));
+});
 const intentFilter = document.querySelector("#intent-filter");
 const studentList = document.querySelector("#student-list");
 const groupList = document.querySelector("#group-list");
@@ -140,14 +183,24 @@ function openStudent(student) {
 }
 
 function openGroup(group) {
+  const isOwner = group.ownerEmail === session?.email || (!group.ownerEmail && group.owner === (session?.name || "Eduardo Schwertz"));
   const full = group.members >= group.limit;
+  const userEmail = session?.email || "eduardo@studylink.local";
+  const isMember = isOwner || requests.some((request) => request.groupId === group.id && request.email === userEmail && request.status === "Aprovada");
   showModal(`
     <span class="chip subject-chip">${escapeHTML(group.subject)}</span>
     <h2 id="modal-title" style="margin-top:.7rem">${escapeHTML(group.name)}</h2>
     <p>${escapeHTML(group.objective)}</p>
     <div class="modal-section"><h3>Organização</h3><p>Administrado por <strong>${escapeHTML(group.owner)}</strong>. Há ${group.members} de ${group.limit} vagas ocupadas.</p></div>
-    <div class="modal-section"><h3>Como entrar</h3><p>Envie uma solicitação para que o organizador possa avaliar sua participação.</p></div>
-    <div class="modal-actions">${full ? `<button class="button button-secondary" disabled>Grupo completo</button>` : `<button class="button button-primary" data-request-group="${group.id}">Solicitar participação</button>`}<button class="button button-secondary" data-close-modal>Fechar</button></div>`);
+    <div class="modal-section"><h3>Como entrar</h3><p>${isOwner ? "Você criou este grupo e já é seu organizador. Não precisa pedir acesso." : "Envie uma solicitação para que o organizador possa avaliar sua participação."}</p></div>
+    <div class="modal-actions">${isMember ? `<button class="button button-primary" data-open-chat="${group.id}">Abrir chat</button>` : ""}${isOwner ? `<span class="request-state">Seu grupo · administrador</span>` : full ? `<button class="button button-secondary" disabled>Grupo completo</button>` : `<button class="button button-primary" data-request-group="${group.id}">Solicitar participação</button>`}<button class="button button-secondary" data-close-modal>Fechar</button></div>`);
+}
+
+
+function openChat(groupId) {
+  const group = groups.find((item) => item.id === groupId);
+  const messages = chats[groupId] || [];
+  showModal(`<h2 id="modal-title">Chat · ${escapeHTML(group.name)}</h2><p>Conversa demonstrativa do grupo. As mensagens ficam salvas neste navegador.</p><div class="chat-messages">${messages.length ? messages.map((message) => `<article class="chat-message"><strong>${escapeHTML(message.name)}</strong><p>${escapeHTML(message.text)}</p><small>${escapeHTML(message.time)}</small></article>`).join("") : '<p class="meta">Ainda não há mensagens. Comece a conversa!</p>'}</div><form id="chat-form" class="chat-form" data-chat-group="${escapeHTML(groupId)}"><label for="chat-message">Mensagem</label><textarea id="chat-message" name="message" maxlength="500" placeholder="Escreva uma mensagem para o grupo..." required></textarea><div class="modal-actions"><button class="button button-secondary" type="button" data-back-to-group="${escapeHTML(groupId)}">Voltar ao grupo</button><button class="button button-primary" type="submit">Enviar</button></div></form>`);
 }
 
 let toastTimer;
@@ -187,10 +240,13 @@ document.querySelector("#group-form").addEventListener("submit", (event) => {
     subject: String(data.get("subject")),
     objective: String(data.get("objective")).trim(),
     owner: session?.name || "Eduardo Schwertz",
+    ownerEmail: session?.email || "eduardo@studylink.local",
     members: 1,
     limit: Number(data.get("limit")),
   };
   groups.unshift(group);
+  chats[group.id] = [{ name: group.owner, text: "Bem-vindos ao grupo! Vamos combinar nossos estudos por aqui.", time: new Date().toLocaleString("pt-BR") }];
+  saveData("studylink.chats", chats);
   saveData("studylink.groups", groups);
   event.currentTarget.reset();
   document.querySelector("#group-form-wrap").hidden = true;
@@ -204,8 +260,10 @@ document.addEventListener("click", (event) => {
   const studentButton = event.target.closest("[data-open-student]");
   const groupButton = event.target.closest("[data-open-group]");
   const requestButton = event.target.closest("[data-request-group]");
+  const chatButton = event.target.closest("[data-open-chat]");
   if (studentButton) openStudent(students.find((student) => student.id === studentButton.dataset.openStudent));
   if (groupButton) openGroup(groups.find((group) => group.id === groupButton.dataset.openGroup));
+  if (chatButton) openChat(chatButton.dataset.openChat);
   if (requestButton) {
     const group = groups.find((item) => item.id === requestButton.dataset.requestGroup);
     const alreadySent = requests.some((request) => request.groupId === group.id && request.email === (session?.email || "visitante@studylink.local"));
@@ -221,28 +279,40 @@ document.addEventListener("click", (event) => {
 modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(); });
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !modal.hidden) closeModal(); });
 document.querySelector("#edit-profile").addEventListener("click", () => {
-  showModal(`<h2 id="modal-title">Editar perfil</h2><p>Atualize como você aparece para outros estudantes.</p><form id="profile-form" class="auth-form"><label>Nome<input name="name" value="${escapeHTML(session?.name || "Eduardo Schwertz")}" required maxlength="60"></label><label>Curso<input name="course" value="Engenharia de Software" required maxlength="80"></label><label>Sobre você<textarea name="bio" maxlength="180">Gosto de organizar estudos em grupo e trocar experiências sobre desenvolvimento de software.</textarea></label><div class="modal-actions"><button class="button button-primary" type="submit">Salvar perfil</button></div></form>`);
+  showModal(`<h2 id="modal-title">Editar perfil</h2><p>Atualize como você aparece para outros estudantes.</p><form id="profile-form" class="auth-form"><label>Nome<input name="name" value="${escapeHTML(session?.name || "Eduardo Schwertz")}" required maxlength="60"></label><label>Curso<select name="course" required>${courses.map((course) => `<option ${course === (session?.course || "Engenharia de Software") ? "selected" : ""}>${escapeHTML(course)}</option>`).join("")}</select></label><label>Sobre você<textarea name="bio" maxlength="180">Gosto de organizar estudos em grupo e trocar experiências sobre desenvolvimento de software.</textarea></label><div class="modal-actions"><button class="button button-primary" type="submit">Salvar perfil</button></div></form>`);
 });
 
 function renderRequests() {
   const mine = document.querySelector("#my-requests"); const incoming = document.querySelector("#incoming-requests");
   const my = requests.filter((r) => r.email === (session?.email || "visitante@studylink.local"));
   mine.innerHTML = my.length ? my.map((r) => `<div class="request-item"><div><strong>${escapeHTML(r.groupName)}</strong><p>${escapeHTML(r.status)}</p></div><span class="request-state">${escapeHTML(r.status)}</span></div>`).join("") : '<p class="meta">Você ainda não enviou pedidos. Explore os grupos disponíveis.</p>';
-  const received = requests.filter((r) => groups.some((g) => g.id === r.groupId && g.owner === (session?.name || "Eduardo Schwertz")));
+  const received = requests.filter((r) => groups.some((g) => g.id === r.groupId && (g.ownerEmail ? g.ownerEmail === session?.email : g.owner === (session?.name || "Eduardo Schwertz"))));
   incoming.innerHTML = received.length ? received.map((r) => `<div class="request-item"><div><strong>${escapeHTML(r.name)}</strong><p>${escapeHTML(r.groupName)} · ${escapeHTML(r.status)}</p></div>${r.status === "Pendente" ? `<div class="request-actions"><button class="button button-primary button-small" data-decision="Aprovada" data-request="${r.id}">Aprovar</button><button class="button button-secondary button-small" data-decision="Recusada" data-request="${r.id}">Recusar</button></div>` : `<span class="request-state">${escapeHTML(r.status)}</span>`}</div>`).join("") : '<p class="meta">Nenhum pedido recebido por enquanto.</p>';
 }
 
 document.querySelector("#auth-button").addEventListener("click", () => {
   if (session) { session = null; localStorage.removeItem("studylink.session"); document.querySelector("#auth-button").textContent = "Entrar"; renderRequests(); showToast("Você saiu da sessão demonstrativa."); return; }
-  showModal(`<h2 id="modal-title">Entrar no StudyLink</h2><p class="demo-note">Acesso demonstrativo: a sessão é salva apenas neste navegador. Este formulário não envia nem armazena senhas; para login real é necessária a API planejada na Sprint 2.</p><form id="auth-form" class="auth-form"><label>Seu nome<input name="name" required maxlength="60" placeholder="Como podemos chamar você?"></label><label>E-mail acadêmico<input name="email" type="email" required placeholder="voce@universidade.edu"></label><label>Senha (apenas demonstração)<input name="password" type="password" required minlength="6" autocomplete="current-password"></label><div class="modal-actions"><button class="button button-primary" type="submit">Acessar demonstração</button></div></form>`);
+  showModal(`<h2 id="modal-title">Entrar no StudyLink</h2><p class="demo-note">Acesso demonstrativo: a sessão é salva apenas neste navegador. Este formulário não envia nem armazena senhas; para login real é necessária a API planejada na Sprint 2.</p><form id="auth-form" class="auth-form"><label>Seu nome<input name="name" required maxlength="60" placeholder="Como podemos chamar você?"></label><label>E-mail acadêmico<input name="email" type="email" required placeholder="voce@universidade.edu"></label><label>Curso<select name="course" required>${courses.map((course) => `<option>${escapeHTML(course)}</option>`).join("")}</select></label><label>Senha (apenas demonstração)<input name="password" type="password" required minlength="6" autocomplete="current-password"></label><div class="modal-actions"><button class="button button-primary" type="submit">Acessar demonstração</button></div></form>`);
 });
 
 document.addEventListener("submit", (event) => {
-  if (event.target.id === "auth-form") { event.preventDefault(); const data = new FormData(event.target); session = {name:String(data.get("name")).trim(),email:String(data.get("email")).trim().toLowerCase()}; saveData("studylink.session", session); document.querySelector("#auth-button").textContent = "Sair"; closeModal(); renderRequests(); showToast(`Olá, ${session.name}! Sua sessão demonstrativa está ativa.`); }
-  if (event.target.id === "profile-form") { event.preventDefault(); const data = new FormData(event.target); if (!session) session = {name:"Eduardo Schwertz", email:"eduardo@studylink.local"}; session.name=String(data.get("name")).trim(); saveData("studylink.session",session); document.querySelector("#profile h2").textContent=session.name; closeModal(); showToast("Perfil atualizado nesta demonstração."); }
+  if (event.target.id === "auth-form") { event.preventDefault(); const data = new FormData(event.target); session = {name:String(data.get("name")).trim(),email:String(data.get("email")).trim().toLowerCase(),course:String(data.get("course"))}; saveData("studylink.session", session); document.querySelector("#auth-button").textContent = "Sair"; closeModal(); renderRequests(); showToast(`Olá, ${session.name}! Sua sessão demonstrativa está ativa.`); }
+  if (event.target.id === "chat-form") {
+    event.preventDefault();
+    const groupId = event.target.dataset.chatGroup;
+    const text = String(new FormData(event.target).get("message")).trim();
+    if (!text) return;
+    if (!chats[groupId]) chats[groupId] = [];
+    chats[groupId].push({ name: session?.name || "Eduardo Schwertz", text, time: new Date().toLocaleString("pt-BR") });
+    saveData("studylink.chats", chats);
+    openChat(groupId);
+  }
+  if (event.target.id === "profile-form") { event.preventDefault(); const data = new FormData(event.target); if (!session) session = {name:"Eduardo Schwertz", email:"eduardo@studylink.local"}; session.name=String(data.get("name")).trim(); session.course=String(data.get("course")); saveData("studylink.session",session); document.querySelector("#profile h2").textContent=session.name; document.querySelector("#profile .profile-heading p:not(.eyebrow)").textContent=`${session.course} · 4º semestre`; closeModal(); showToast("Perfil atualizado nesta demonstração."); }
 });
 
 document.addEventListener("click", (event) => {
+  const backButton = event.target.closest("[data-back-to-group]");
+  if (backButton) { openGroup(groups.find((group) => group.id === backButton.dataset.backToGroup)); return; }
   const decision = event.target.closest("[data-decision]");
   if (decision) {
     const request=requests.find((item)=>item.id===decision.dataset.request);

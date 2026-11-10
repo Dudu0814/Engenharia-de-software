@@ -80,7 +80,7 @@
           <aside class="filters card">
             <h3>Refinar busca</h3>
             <label for="subject-filter">Disciplina</label>
-            <select id="subject-filter"><option value="all">Todas as disciplinas</option><option value="calculo">Cálculo I</option><option value="algoritmos">Algoritmos</option><option value="gestao">Gestão de Projetos</option></select>
+            <select id="subject-filter"><option value="all">Todas as disciplinas</option></select>
             <label for="intent-filter">O que procura?</label>
             <select id="intent-filter"><option value="all">Todas as intenções</option><option value="learn">Quem quer aprender</option><option value="help">Quem pode ajudar</option></select>
             <button id="clear-filters" class="button button-secondary button-small">Limpar filtros</button>
@@ -100,7 +100,7 @@
           <form id="group-form" class="group-form card">
             <div><h3>Novo grupo de estudo</h3><p>Defina uma proposta clara antes de convidar estudantes.</p></div>
             <label>Nome do grupo<input name="name" maxlength="60" placeholder="Ex.: Revisão de Cálculo I" required /></label>
-            <label>Disciplina<select name="subject" required><option value="">Selecione</option><option>Cálculo I</option><option>Algoritmos</option><option>Gestão de Projetos</option></select></label>
+            <label>Disciplina<select name="subject" required><option value="">Selecione</option></select></label>
             <label>Objetivo<textarea name="objective" maxlength="160" placeholder="O que o grupo quer alcançar?" required></textarea></label>
             <label>Limite de membros<input name="limit" type="number" min="2" max="20" value="5" required /></label>
             <div class="form-actions"><button class="button button-secondary" type="button" id="cancel-group-form">Cancelar</button><button class="button button-primary" type="submit">Criar grupo</button></div>

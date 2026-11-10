@@ -1,21 +1,16 @@
-# Sprint 4 — Qualidade e evolução
+# Sprint 4 — Backlog técnico para API e testes
 
-## Objetivo
-Trocar interações locais por serviços confiáveis e elevar a qualidade do produto com testes e revisão de código.
+O incremento de interface desta sprint está em [`entrega.md`](entrega.md). Estes itens seguem como evolução técnica necessária antes de uso real.
 
-## Backlog priorizado
-1. Implementar API REST com autenticação e autorização no servidor (alto valor, pré-requisito para dados compartilhados).
-2. Persistir estudantes, grupos, solicitações e participações em banco relacional.
-3. Garantir aprovação transacional e limite de vagas (ADR 002).
-4. Ligar interface a API, com estados de carregamento, erro e sessão expirada.
-5. Adicionar validações, testes de unidade e integração e pipeline de CI.
+1. Criar API REST com cadastro/login seguros e autorização no servidor.
+2. Salvar cursos, perfis, grupos, solicitações e participações em banco de dados.
+3. Fazer aprovação de pedidos transacional para respeitar a capacidade do grupo.
+4. Ligar a interface à API e tratar carregamento, erros e sessão expirada.
+5. Cobrir regras e fluxos com testes automatizados e executar no CI.
 6. Revisar acessibilidade, privacidade e responsividade.
 
-## Critérios de aceite
-- Nenhuma senha armazenada em texto puro ou no cliente.
-- Aprovações concorrentes não ultrapassam o limite de membros.
-- Fluxos principais cobertos por testes automatizados executados no CI.
-- Mudanças integradas por pull request revisado; README inclui execução e configuração.
-
-## Evidências esperadas
-Pull requests, execução verde do pipeline, testes, revisão registrada, diagrama arquitetural atualizado e demonstração de um fluxo completo usando API.
+## Critérios de aceite para produção
+- Senhas tratadas apenas no servidor com armazenamento seguro.
+- Aprovações concorrentes nunca excedem o limite de membros.
+- Fluxos principais verificados por testes no pipeline.
+- README documenta instalação, execução, configuração e limites conhecidos.

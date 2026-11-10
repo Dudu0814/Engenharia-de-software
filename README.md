@@ -1,23 +1,26 @@
 # StudyLink
 
-Site responsivo para aproximar estudantes por disciplina, conteúdo e objetivo de estudo. O repositório preserva o MVP original em [`mvp-sprint-2/`](mvp-sprint-2/) e evolui o fluxo navegável para a Sprint 3.
+Site responsivo para aproximar estudantes por curso, disciplina e objetivo de estudo. O MVP inicial está preservado em [`mvp-sprint-2/`](mvp-sprint-2/). A versão atual evolui o fluxo demonstrativo das Sprints 3 e 4.
 
-## Como visualizar
+## Como abrir
 
-Abra `index.html` em um navegador moderno. Não há instalação necessária. Criação de grupos, pedidos e decisões ficam salvos no `localStorage` do navegador atual.
+Abra `index.html` em um navegador moderno. Não precisa instalar ferramentas. Grupos, pedidos e sessão ficam salvos no armazenamento local do navegador.
 
-## O que funciona na demonstração
+## O que dá para demonstrar
 
-- busca filtrada de estudantes e perfis;
-- criação de grupo e solicitação de participação;
-- acesso de demonstração e painel de pedidos enviados/recebidos;
-- aprovação e recusa com validação local da capacidade.
+- Cursos e matérias de áreas como software, jogos, Direito e Medicina/Psiquiatria.
+- Busca de perfis por disciplina e interesse.
+- Criação de grupo, pedido de entrada, aprovação e recusa.
+- Chat demonstrativo dentro do grupo, com histórico salvo neste navegador.
+- O criador aparece como administrador/membro do grupo e não precisa solicitar acesso.
+- Perfil e sessão demonstrativa.
 
-O formulário de acesso não autentica usuários de verdade e não envia nem armazena a senha. Os dados não são compartilhados entre dispositivos. Para produção, implementar API e banco conforme [`docs/sprint-2/adrs/`](docs/sprint-2/adrs/).
+O acesso não é autenticação real, e os dados não são compartilhados entre dispositivos. Não use dados sensíveis. Uso real requer API HTTPS, banco de dados e validação no servidor.
 
-## Sprints
+## Documentação
 
-- [Sprint 2 — decisões arquiteturais](docs/sprint-2/adrs/)
-- [Sprint 3 — incremento funcional e roteiro de demonstração](docs/sprint-3/entrega.md)
-- [Sprint 4 — backlog de qualidade](docs/sprint-4/plano.md)
-- [Sprint 5 — checklist de release](docs/sprint-5/plano.md)
+- [Decisões arquiteturais da Sprint 2](docs/sprint-2/adrs/)
+- [Entrega da Sprint 3](docs/sprint-3/entrega.md)
+- [Entrega de interface da Sprint 4](docs/sprint-4/entrega.md)
+- [Próximos itens técnicos da Sprint 4](docs/sprint-4/plano.md)
+- [Preparação da Sprint 5](docs/sprint-5/plano.md)
