@@ -20,16 +20,17 @@
         <a href="#encontrar">Encontrar estudantes</a>
         <a href="#grupos">Grupos</a>
         <a href="#arquitetura">Arquitetura</a>
-        <a class="nav-cta" href="#perfil">Ver perfil</a>
+        <a href="#solicitacoes">Solicitações</a>
+        <button class="button button-primary button-small" id="auth-button">Entrar</button>
       </nav>
     </header>
 
     <main id="inicio">
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">StudyLink · MVP · Sprint 2</p>
+          <p class="eyebrow">StudyLink · MVP evoluído · Sprint 3</p>
           <h1>Estudar junto começa com uma boa conexão.</h1>
-          <p>Encontre colegas que estudam a mesma disciplina, compartilhe o que você já domina e forme grupos com objetivos claros.</p>
+          <p>Encontre colegas, compartilhe o que você domina, organize grupos e acompanhe cada solicitação em um só lugar.</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#encontrar">Encontrar estudantes <span>→</span></a>
             <a class="button button-secondary" href="#arquitetura">Ver solução</a>
@@ -116,10 +117,15 @@
         </div>
       </section>
 
+      <section id="solicitacoes" class="section requests-section">
+        <div class="section-heading"><div><p class="eyebrow">Área do estudante</p><h2>Solicitações e grupos sob sua organização.</h2><p>Acompanhe pedidos enviados e aprove ou recuse quem quer participar dos seus grupos.</p></div></div>
+        <div class="requests-grid"><article class="card"><h3>Meus pedidos</h3><div id="my-requests" class="request-list"></div></article><article class="card"><h3>Pedidos recebidos</h3><div id="incoming-requests" class="request-list"></div></article></div>
+      </section>
+
       <section class="cta-section"><div><p class="eyebrow">Pronto para conectar?</p><h2>Menos busca, mais aprendizado compartilhado.</h2></div><a class="button button-light" href="#encontrar">Explorar estudantes <span>→</span></a></section>
     </main>
 
-    <footer><a class="brand" href="#inicio"><span class="brand-mark">S</span>StudyLink</a><p>MVP acadêmico · Engenharia de Software</p><p>Feito para aproximar estudantes.</p></footer>
+    <footer><a class="brand" href="#inicio"><span class="brand-mark">S</span>StudyLink</a><p>MVP acadêmico · Engenharia de Software</p><p>Protótipo local: os dados ficam neste navegador.</p></footer>
     <div id="profile-modal" class="modal-backdrop" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close" aria-label="Fechar">×</button><div id="modal-content"></div></section></div>
     <div id="toast" class="toast" role="status" hidden></div>
     <script src="script.js"></script>

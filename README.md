@@ -1,24 +1,23 @@
 # StudyLink
 
-Site responsivo que apresenta o MVP do StudyLink: uma forma simples de aproximar estudantes por disciplina, conteúdo e objetivo de estudo.
+Site responsivo para aproximar estudantes por disciplina, conteúdo e objetivo de estudo. O repositório preserva o MVP original em [`mvp-sprint-2/`](mvp-sprint-2/) e evolui o fluxo navegável para a Sprint 3.
 
 ## Como visualizar
 
-Abra o arquivo `index.html` em um navegador moderno. Nenhuma instalação ou servidor é necessário.
+Abra `index.html` em um navegador moderno. Não há instalação necessária. Criação de grupos, pedidos e decisões ficam salvos no `localStorage` do navegador atual.
 
-O site inclui telas navegáveis de descoberta de estudantes, grupos de estudo, perfil acadêmico e solicitações. Os dados exibidos são demonstrativos e as interações são simuladas no próprio navegador.
+## O que funciona na demonstração
 
-## Escopo demonstrado
+- busca filtrada de estudantes e perfis;
+- criação de grupo e solicitação de participação;
+- acesso de demonstração e painel de pedidos enviados/recebidos;
+- aprovação e recusa com validação local da capacidade.
 
-- perfil acadêmico e disciplinas cadastradas;
-- conteúdos marcados como “quero aprender” ou “posso ajudar”;
-- busca de estudantes por disciplina e intenção;
-- criação visual de grupos de estudo;
-- fluxo demonstrativo de solicitação, aprovação e recusa de entrada em grupos.
+O formulário de acesso não autentica usuários de verdade e não envia nem armazena a senha. Os dados não são compartilhados entre dispositivos. Para produção, implementar API e banco conforme [`docs/sprint-2/adrs/`](docs/sprint-2/adrs/).
 
-## Sprint 2 - requisitos e arquitetura
+## Sprints
 
-As duas decisões registradas são:
-
-- [ADR 001 - Interface web e API REST](docs/sprint-2/adrs/ADR-001-interface-web-e-api-rest.md)
-- [ADR 002 - Solicitações e participações separadas](docs/sprint-2/adrs/ADR-002-solicitacoes-e-participacoes-separadas.md)
+- [Sprint 2 — decisões arquiteturais](docs/sprint-2/adrs/)
+- [Sprint 3 — incremento funcional e roteiro de demonstração](docs/sprint-3/entrega.md)
+- [Sprint 4 — backlog de qualidade](docs/sprint-4/plano.md)
+- [Sprint 5 — checklist de release](docs/sprint-5/plano.md)

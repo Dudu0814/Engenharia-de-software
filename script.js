@@ -49,11 +49,16 @@ const students = [
   },
 ];
 
-const groups = [
+const initialGroups = [
   { id: "calculo", name: "Cálculo I sem mistério", subject: "Cálculo I", objective: "Resolver listas de limites e derivadas antes da P1.", owner: "Camila Duarte", members: 2, limit: 5 },
   { id: "algoritmos", name: "Prática de algoritmos", subject: "Algoritmos", objective: "Treinar lógica e estruturas de repetição com desafios curtos.", owner: "Rafael Costa", members: 2, limit: 4 },
 ];
 
+const loadData = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
+const saveData = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+let groups = loadData("studylink.groups", initialGroups);
+let requests = loadData("studylink.requests", []);
+let session = loadData("studylink.session", null);
 const subjectFilter = document.querySelector("#subject-filter");
 const intentFilter = document.querySelector("#intent-filter");
 const studentList = document.querySelector("#student-list");
@@ -181,16 +186,18 @@ document.querySelector("#group-form").addEventListener("submit", (event) => {
     name: String(data.get("name")).trim(),
     subject: String(data.get("subject")),
     objective: String(data.get("objective")).trim(),
-    owner: "Eduardo Schwertz",
+    owner: session?.name || "Eduardo Schwertz",
     members: 1,
     limit: Number(data.get("limit")),
   };
   groups.unshift(group);
+  saveData("studylink.groups", groups);
   event.currentTarget.reset();
   document.querySelector("#group-form-wrap").hidden = true;
   document.querySelector("#open-group-form").hidden = false;
   renderGroups();
-  showToast("Grupo criado. Ele já aparece na lista de grupos ativos.");
+  renderRequests();
+  showToast("Grupo criado e salvo neste navegador.");
 });
 
 document.addEventListener("click", (event) => {
@@ -201,17 +208,52 @@ document.addEventListener("click", (event) => {
   if (groupButton) openGroup(groups.find((group) => group.id === groupButton.dataset.openGroup));
   if (requestButton) {
     const group = groups.find((item) => item.id === requestButton.dataset.requestGroup);
-    requestButton.textContent = "Solicitação enviada";
-    requestButton.disabled = true;
-    closeModal();
-    showToast(`Solicitação enviada para ${group.name}. O organizador poderá aprovar ou recusar.`);
+    const alreadySent = requests.some((request) => request.groupId === group.id && request.email === (session?.email || "visitante@studylink.local"));
+    if (alreadySent) { showToast("Você já enviou uma solicitação para este grupo."); return; }
+    requests.push({ id: `request-${Date.now()}`, groupId: group.id, groupName: group.name, email: session?.email || "visitante@studylink.local", name: session?.name || "Visitante", status: "Pendente" });
+    saveData("studylink.requests", requests);
+    closeModal(); renderRequests();
+    showToast(`Solicitação enviada para ${group.name}.`);
   }
   if (event.target.closest("[data-close-modal]") || event.target.classList.contains("modal-close")) closeModal();
 });
 
 modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(); });
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !modal.hidden) closeModal(); });
-document.querySelector("#edit-profile").addEventListener("click", () => showToast("Nesta demonstração, o perfil já está preenchido e pronto para aparecer nas buscas."));
+document.querySelector("#edit-profile").addEventListener("click", () => {
+  showModal(`<h2 id="modal-title">Editar perfil</h2><p>Atualize como você aparece para outros estudantes.</p><form id="profile-form" class="auth-form"><label>Nome<input name="name" value="${escapeHTML(session?.name || "Eduardo Schwertz")}" required maxlength="60"></label><label>Curso<input name="course" value="Engenharia de Software" required maxlength="80"></label><label>Sobre você<textarea name="bio" maxlength="180">Gosto de organizar estudos em grupo e trocar experiências sobre desenvolvimento de software.</textarea></label><div class="modal-actions"><button class="button button-primary" type="submit">Salvar perfil</button></div></form>`);
+});
+
+function renderRequests() {
+  const mine = document.querySelector("#my-requests"); const incoming = document.querySelector("#incoming-requests");
+  const my = requests.filter((r) => r.email === (session?.email || "visitante@studylink.local"));
+  mine.innerHTML = my.length ? my.map((r) => `<div class="request-item"><div><strong>${escapeHTML(r.groupName)}</strong><p>${escapeHTML(r.status)}</p></div><span class="request-state">${escapeHTML(r.status)}</span></div>`).join("") : '<p class="meta">Você ainda não enviou pedidos. Explore os grupos disponíveis.</p>';
+  const received = requests.filter((r) => groups.some((g) => g.id === r.groupId && g.owner === (session?.name || "Eduardo Schwertz")));
+  incoming.innerHTML = received.length ? received.map((r) => `<div class="request-item"><div><strong>${escapeHTML(r.name)}</strong><p>${escapeHTML(r.groupName)} · ${escapeHTML(r.status)}</p></div>${r.status === "Pendente" ? `<div class="request-actions"><button class="button button-primary button-small" data-decision="Aprovada" data-request="${r.id}">Aprovar</button><button class="button button-secondary button-small" data-decision="Recusada" data-request="${r.id}">Recusar</button></div>` : `<span class="request-state">${escapeHTML(r.status)}</span>`}</div>`).join("") : '<p class="meta">Nenhum pedido recebido por enquanto.</p>';
+}
+
+document.querySelector("#auth-button").addEventListener("click", () => {
+  if (session) { session = null; localStorage.removeItem("studylink.session"); document.querySelector("#auth-button").textContent = "Entrar"; renderRequests(); showToast("Você saiu da sessão demonstrativa."); return; }
+  showModal(`<h2 id="modal-title">Entrar no StudyLink</h2><p class="demo-note">Acesso demonstrativo: a sessão é salva apenas neste navegador. Este formulário não envia nem armazena senhas; para login real é necessária a API planejada na Sprint 2.</p><form id="auth-form" class="auth-form"><label>Seu nome<input name="name" required maxlength="60" placeholder="Como podemos chamar você?"></label><label>E-mail acadêmico<input name="email" type="email" required placeholder="voce@universidade.edu"></label><label>Senha (apenas demonstração)<input name="password" type="password" required minlength="6" autocomplete="current-password"></label><div class="modal-actions"><button class="button button-primary" type="submit">Acessar demonstração</button></div></form>`);
+});
+
+document.addEventListener("submit", (event) => {
+  if (event.target.id === "auth-form") { event.preventDefault(); const data = new FormData(event.target); session = {name:String(data.get("name")).trim(),email:String(data.get("email")).trim().toLowerCase()}; saveData("studylink.session", session); document.querySelector("#auth-button").textContent = "Sair"; closeModal(); renderRequests(); showToast(`Olá, ${session.name}! Sua sessão demonstrativa está ativa.`); }
+  if (event.target.id === "profile-form") { event.preventDefault(); const data = new FormData(event.target); if (!session) session = {name:"Eduardo Schwertz", email:"eduardo@studylink.local"}; session.name=String(data.get("name")).trim(); saveData("studylink.session",session); document.querySelector("#profile h2").textContent=session.name; closeModal(); showToast("Perfil atualizado nesta demonstração."); }
+});
+
+document.addEventListener("click", (event) => {
+  const decision = event.target.closest("[data-decision]");
+  if (decision) {
+    const request=requests.find((item)=>item.id===decision.dataset.request);
+    if (decision.dataset.decision === "Aprovada") {
+      const group=groups.find((item)=>item.id===request.groupId);
+      if (!group || group.members >= group.limit) { showToast("Não há vagas disponíveis neste grupo."); return; }
+      group.members += 1; saveData("studylink.groups",groups); renderGroups();
+    }
+    request.status=decision.dataset.decision; saveData("studylink.requests",requests); renderRequests(); showToast(`Solicitação ${request.status.toLowerCase()}.`);
+  }
+});
 
 const navToggle = document.querySelector(".nav-toggle");
 const nav = document.querySelector(".site-nav");
@@ -221,5 +263,7 @@ navToggle.addEventListener("click", () => {
 });
 nav.addEventListener("click", () => { nav.classList.remove("open"); navToggle.setAttribute("aria-expanded", "false"); });
 
+if (session) document.querySelector("#auth-button").textContent = "Sair";
 renderStudents();
 renderGroups();
+renderRequests();
