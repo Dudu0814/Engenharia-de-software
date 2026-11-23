@@ -20,7 +20,12 @@ service cloud.firestore {
       allow update: if signedIn() && (
         resource.data.ownerId == request.auth.uid ||
         (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds', 'memberCount', 'updatedAt']) &&
+          resource.data.get('visibility', 'public') == 'public' &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds', 'memberNames', 'memberCount', 'updatedAt']) &&
+          !(request.auth.uid in resource.data.memberIds) &&
+          request.resource.data.memberCount <= resource.data.limit &&
+          request.resource.data.get('memberNames', {}).diff(resource.data.get('memberNames', {})).affectedKeys().hasOnly([request.auth.uid]) &&
+          request.resource.data.memberCount == request.resource.data.memberIds.size() &&
           request.resource.data.memberIds.hasAll(resource.data.memberIds) &&
           request.auth.uid in request.resource.data.memberIds &&
           request.resource.data.memberIds.size() == resource.data.memberIds.size() + 1 &&
@@ -33,6 +38,21 @@ service cloud.firestore {
         allow create: if isRoomMember(roomId) && request.resource.data.senderId == request.auth.uid;
         allow update, delete: if false;
       }
+    }
+    match /roomRequests/{requestId} {
+      allow read: if signedIn() && (resource.data.requesterId == request.auth.uid || resource.data.ownerId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.requesterId == request.auth.uid &&
+        request.resource.data.status == 'Pendente' &&
+        requestId == request.resource.data.roomId + '_' + request.auth.uid &&
+        get(/databases/$(database)/documents/rooms/$(request.resource.data.roomId)).data.ownerId == request.resource.data.ownerId &&
+        get(/databases/$(database)/documents/rooms/$(request.resource.data.roomId)).data.visibility == 'private';
+      allow update: if signedIn() && ((resource.data.ownerId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+        resource.data.status == 'Pendente' && request.resource.data.status in ['Aprovada', 'Recusada']) ||
+        (resource.data.requesterId == request.auth.uid && resource.data.status != 'Pendente' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'name', 'updatedAt']) &&
+        request.resource.data.status == 'Pendente'));
+      allow delete: if false;
     }
     match /directConversations/{conversationId} {
       allow read: if signedIn() && request.auth.uid in resource.data.participantIds;

@@ -5,7 +5,7 @@ import {
   signOut, updateProfile,
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import {
-  addDoc, arrayUnion, collection, doc, getDoc, getDocs, getFirestore, limit, onSnapshot,
+  addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, limit, onSnapshot, runTransaction,
   orderBy, query, serverTimestamp, setDoc, updateDoc, where,
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
@@ -25,25 +25,33 @@ function requireFirebase() {
 }
 
 function profileFromUser(user, profile = {}) {
-  return { uid: user.uid, name: profile.name || user.displayName || "Estudante", email: user.email, course: profile.course || "Não informado" };
+  return { ...profile, uid: user.uid, name: profile.name || user.displayName || "Estudante", email: user.email, course: profile.course || "" };
 }
 
 export function watchSession(callback) {
   if (!firebaseReady) return () => {};
-  return onAuthStateChanged(auth, async (user) => {
-    if (!user) return callback(null);
-    const snapshot = await getDoc(doc(db, "profiles", user.uid));
-    callback(profileFromUser(user, snapshot.exists() ? snapshot.data() : {}));
+  let stopProfile = () => {};
+  return onAuthStateChanged(auth, (user) => {
+    stopProfile();
+    if (!user) { callback(null); return; }
+    stopProfile = onSnapshot(doc(db, "profiles", user.uid), (snapshot) => {
+      callback(profileFromUser(user, snapshot.exists() ? snapshot.data() : {}));
+    });
   });
 }
 
-export async function registerAccount({ name, email, password, course }) {
+export async function registerAccount({ name, email, password, course, university, subject, semester, intent, difficulty }) {
   requireFirebase();
   const result = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(result.user, { displayName: name });
-  const profile = { name, email: email.toLowerCase(), course, updatedAt: serverTimestamp() };
+  const profile = { name, email: email.toLowerCase(), course, university, subject, semester, intent, difficulty, updatedAt: serverTimestamp() };
   await setDoc(doc(db, "profiles", result.user.uid), profile, { merge: true });
   return profileFromUser(result.user, profile);
+}
+
+export async function saveProfile(user, profile) {
+  requireFirebase();
+  await setDoc(doc(db, "profiles", user.uid), { ...profile, updatedAt: serverTimestamp() }, { merge: true });
 }
 
 export async function signInAccount(email, password) {
@@ -58,11 +66,11 @@ export async function signOutAccount() {
   await signOut(auth);
 }
 
-export async function createOnlineRoom({ name, subject, objective, limit }, owner) {
+export async function createOnlineRoom({ name, subject, objective, limit, visibility }, owner) {
   requireFirebase();
   const room = await addDoc(collection(db, "rooms"), {
     name, subject, objective, limit, ownerName: owner.name, ownerId: owner.uid,
-    memberIds: [owner.uid], memberCount: 1, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+    memberIds: [owner.uid], memberNames: { [owner.uid]: owner.name }, memberCount: 1, visibility, createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
   });
   return room.id;
 }
@@ -75,14 +83,64 @@ export function watchRooms(callback, onError) {
 }
 
 export async function joinOnlineRoom(roomId, user) {
-  requireFirebase();
-  const room = await getDoc(doc(db, "rooms", roomId));
-  if (!room.exists()) throw new Error("Esta sala não existe mais.");
-  const data = room.data();
-  if (data.memberIds.includes(user.uid)) return;
-  if (data.memberCount >= data.limit) throw new Error("Esta sala está cheia.");
-  await updateDoc(room.ref, { memberIds: arrayUnion(user.uid), memberCount: data.memberCount + 1, updatedAt: serverTimestamp() });
+  const ref = doc(db, "rooms", roomId);
+  await runTransaction(db, async (transaction) => {
+    const room = await transaction.get(ref);
+    if (!room.exists()) throw new Error("Este grupo não existe mais.");
+    const data = room.data();
+    if ((data.memberIds || []).includes(user.uid)) return;
+    if (data.visibility === "private") throw new Error("Este grupo exige aprovação.");
+    if (data.memberIds.length >= data.limit) throw new Error("Este grupo está cheio.");
+    transaction.update(ref, { memberIds: [...data.memberIds, user.uid], memberNames: { ...(data.memberNames || {}), [user.uid]: user.name }, memberCount: data.memberIds.length + 1, updatedAt: serverTimestamp() });
+  });
 }
+
+export async function requestRoomAccess(room, user) {
+  const ref = doc(db, "roomRequests", `${room.id}_${user.uid}`);
+  await setDoc(ref, { roomId: room.id, groupName: room.name, ownerId: room.ownerId, requesterId: user.uid, name: user.name, status: "Pendente", updatedAt: serverTimestamp() });
+}
+
+export function watchRoomRequests(userId, field, callback, onError) {
+  return onSnapshot(query(collection(db, "roomRequests"), where(field, "==", userId)), (snapshot) => callback(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))), onError);
+}
+
+export async function decideRoomRequest(request, approved) {
+  const requestRef = doc(db, "roomRequests", request.id);
+  const roomRef = doc(db, "rooms", request.roomId);
+  await runTransaction(db, async (transaction) => {
+    const requestSnap = await transaction.get(requestRef);
+    const roomSnap = await transaction.get(roomRef);
+    if (!requestSnap.exists() || requestSnap.data().status !== "Pendente") throw new Error("Esta solicitação já foi respondida.");
+    if (!roomSnap.exists()) throw new Error("Este grupo não existe mais.");
+    const room = roomSnap.data();
+    const currentRequest = requestSnap.data();
+    if (approved && !room.memberIds.includes(currentRequest.requesterId)) {
+      if (room.memberIds.length >= room.limit) throw new Error("O grupo está cheio.");
+      transaction.update(roomRef, { memberIds: [...room.memberIds, currentRequest.requesterId], memberNames: { ...(room.memberNames || {}), [currentRequest.requesterId]: currentRequest.name }, memberCount: room.memberIds.length + 1, updatedAt: serverTimestamp() });
+    }
+    transaction.update(requestRef, { status: approved ? "Aprovada" : "Recusada", updatedAt: serverTimestamp() });
+  });
+}
+
+export async function getRoomMemberNames(memberIds) {
+  const profiles = await Promise.all(memberIds.map((id) => getDoc(doc(db, "profiles", id))));
+  return Object.fromEntries(profiles.map((profile, index) => [memberIds[index], profile.exists() ? profile.data().name : "Membro sem perfil"]));
+}
+
+export async function removeRoomMember(roomId, userId) {
+  const ref = doc(db, "rooms", roomId);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) throw new Error("Este grupo não existe mais.");
+    const room = snapshot.data();
+    if (userId === room.ownerId) throw new Error("O organizador não pode ser removido.");
+    const members = room.memberIds.filter((id) => id !== userId);
+    const names = { ...(room.memberNames || {}) }; delete names[userId];
+    transaction.update(ref, { memberIds: members, memberNames: names, memberCount: members.length, updatedAt: serverTimestamp() });
+  });
+}
+
+export async function deleteOnlineRoom(roomId) { await deleteDoc(doc(db, "rooms", roomId)); }
 
 export function watchRoomMessages(roomId, callback, onError) {
   if (!firebaseReady) return () => {};
@@ -116,6 +174,16 @@ async function ensureConversation(currentUser, recipient) {
 export async function openDirectConversation(currentUser, recipient) {
   requireFirebase();
   return ensureConversation(currentUser, recipient);
+}
+
+export function watchDirectConversations(userId, callback, onError) {
+  if (!firebaseReady || !userId) return () => {};
+  const conversations = query(collection(db, "directConversations"), where("participantIds", "array-contains", userId));
+  return onSnapshot(conversations, (snapshot) => {
+    const items = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }));
+    items.sort((a, b) => (b.updatedAt?.toMillis() || 0) - (a.updatedAt?.toMillis() || 0));
+    callback(items);
+  }, onError);
 }
 
 export function watchDirectMessages(conversationId, callback, onError) {

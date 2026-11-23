@@ -29,7 +29,7 @@
     <main id="inicio">
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">StudyLink · MVP evoluído · Sprint 3</p>
+          <p class="eyebrow">StudyLink · Conectando estudantes</p>
           <h1>Estudar junto começa com uma boa conexão.</h1>
           <p>Encontre colegas, compartilhe o que você domina, organize grupos e acompanhe cada solicitação em um só lugar.</p>
           <div class="hero-actions">
@@ -62,17 +62,17 @@
       </section>
 
       <section id="arquitetura" class="section architecture-section">
-        <div class="section-heading"><div><p class="eyebrow">Projeto da solução</p><h2>Uma base simples para evoluir com segurança.</h2><p>O site atual funciona como protótipo navegável. A arquitetura da Sprint 2 define como ele evolui para uma plataforma com dados persistentes e regras protegidas no servidor.</p></div></div>
+        <div class="section-heading"><div><p class="eyebrow">Projeto da solução</p><h2>Uma base simples para evoluir com segurança.</h2><p>O StudyLink usa autenticação e armazenamento online para conectar estudantes e organizar grupos.</p></div></div>
         <div class="architecture-flow" aria-label="Visão de arquitetura do StudyLink">
           <article><span class="architecture-icon">◉</span><p class="architecture-label">Pessoa</p><h3>Estudante</h3><p>Descobre colegas, organiza grupos e acompanha solicitações.</p></article>
           <span class="architecture-arrow" aria-hidden="true">→</span>
           <article><span class="architecture-icon">⌘</span><p class="architecture-label">Interface web</p><h3>StudyLink no navegador</h3><p>Perfis, busca, grupos e formulários responsivos.</p></article>
           <span class="architecture-arrow" aria-hidden="true">→</span>
-          <article><span class="architecture-icon">⇄</span><p class="architecture-label">Serviço futuro</p><h3>API do StudyLink</h3><p>Autentica, aplica regras e organiza as conexões.</p></article>
+          <article><span class="architecture-icon">⇄</span><p class="architecture-label">Autenticação</p><h3>Firebase Authentication</h3><p>Autentica, aplica regras e organiza as conexões.</p></article>
           <span class="architecture-arrow" aria-hidden="true">→</span>
-          <article><span class="architecture-icon">▣</span><p class="architecture-label">Dados futuros</p><h3>Banco de dados</h3><p>Guarda perfis, conteúdos, grupos e solicitações.</p></article>
+          <article><span class="architecture-icon">▣</span><p class="architecture-label">Dados online</p><h3>Banco de dados</h3><p>Guarda perfis, conteúdos, grupos e solicitações.</p></article>
         </div>
-        <div class="architecture-notes"><div><strong>Contexto</strong><span>Estudante, professor e plataforma.</span></div><div><strong>Containers</strong><span>Interface web, API e banco de dados.</span></div><div><strong>Decisões</strong><span>2 ADRs registrados para orientar a evolução.</span></div></div>
+        <div class="architecture-notes"><div><strong>Contexto</strong><span>Estudante, professor e plataforma.</span></div><div><strong>Containers</strong><span>Interface web, API e banco de dados.</span></div><div><strong>Decisões</strong><span>Controle de acesso para contas e grupos.</span></div></div>
       </section>
 
       <section id="encontrar" class="section discovery-section">
@@ -112,6 +112,7 @@
               <input id="direct-recipient-email" type="email" placeholder="amigo@email.com" />
               <button class="button button-secondary button-small" type="submit">Iniciar conversa</button>
             </form>
+            <div id="direct-conversation-history" class="direct-conversation-history" hidden><strong>Conversas</strong><div id="direct-conversation-list" aria-label="Histórico de conversas"></div></div>
             <div class="direct-chat-contact" aria-current="page">
               <span id="direct-chat-contact-avatar" class="avatar teal">LM</span>
               <div><strong id="direct-chat-contact-name">Laura Menezes</strong><small id="direct-chat-contact-status">Conversa sobre Cálculo I</small></div>
@@ -130,13 +131,14 @@
       </section>
 
       <section id="grupos" class="section groups-section">
-        <div class="section-heading"><div><p class="eyebrow">Grupos de estudo</p><h2>Estude com um objetivo em comum.</h2><p>Conheça os grupos disponíveis ou simule a criação de um novo grupo.</p></div><button class="button button-primary" id="open-group-form">Criar grupo <span>+</span></button></div>
+        <div class="section-heading"><div><p class="eyebrow">Grupos de estudo</p><h2>Estude com um objetivo em comum.</h2><p>Conheça os grupos disponíveis ou crie seu grupo de estudo.</p></div><button class="button button-primary" id="open-group-form">Criar grupo <span>+</span></button></div>
         <div id="group-form-wrap" class="group-form-wrap" hidden>
           <form id="group-form" class="group-form card">
             <div><h3>Novo grupo de estudo</h3><p>Defina uma proposta clara antes de convidar estudantes.</p></div>
             <label>Nome do grupo<input name="name" maxlength="60" placeholder="Ex.: Revisão de Cálculo I" required /></label>
             <label>Disciplina<select name="subject" required><option value="">Selecione</option></select></label>
             <label>Objetivo<textarea name="objective" maxlength="160" placeholder="O que o grupo quer alcançar?" required></textarea></label>
+            <label>Privacidade<select name="visibility"><option value="public">Público — entrada livre</option><option value="private">Privado — requer aprovação</option></select></label>
             <label>Limite de membros<input name="limit" type="number" min="2" max="20" value="5" required /></label>
             <div class="form-actions"><button class="button button-secondary" type="button" id="cancel-group-form">Cancelar</button><button class="button button-primary" type="submit">Criar grupo</button></div>
           </form>
@@ -146,9 +148,7 @@
 
       <section id="perfil" class="section profile-section">
         <div class="profile-panel card">
-          <div class="profile-heading"><span class="avatar large purple">ES</span><div><p class="eyebrow">Seu perfil acadêmico</p><h2>Eduardo Schwertz</h2><p>Engenharia de Software · 4º semestre</p></div><button class="button button-secondary button-small" id="edit-profile">Editar perfil</button></div>
-          <div class="profile-grid"><div><h3>Disciplinas</h3><div class="chips"><span class="chip subject-chip">Engenharia de Software</span><span class="chip subject-chip">Banco de Dados</span><span class="chip subject-chip">Algoritmos</span></div></div><div><h3>Conteúdos declarados</h3><div class="chips"><span class="chip help-chip">Posso ajudar: Scrum</span><span class="chip learn-chip">Quero aprender: Modelagem ER</span></div></div></div>
-          <p class="profile-description">Gosto de organizar estudos em grupo e trocar experiências sobre desenvolvimento de software.</p>
+          <div class="profile-heading"><span class="avatar large purple">?</span><div><p class="eyebrow">Seu perfil acadêmico</p><h2>Seu perfil</h2><p>Entre para ver seu perfil.</p></div></div>
         </div>
       </section>
 
@@ -160,7 +160,7 @@
       <section class="cta-section"><div><p class="eyebrow">Pronto para conectar?</p><h2>Menos busca, mais aprendizado compartilhado.</h2></div><a class="button button-light" href="#encontrar">Explorar estudantes <span>→</span></a></section>
     </main>
 
-    <footer><a class="brand" href="#inicio"><span class="brand-mark">S</span>StudyLink</a><p>MVP acadêmico · Engenharia de Software</p><p>Com Firebase, conecte estudantes em tempo real.</p></footer>
+    <footer><a class="brand" href="#inicio"><span class="brand-mark">S</span>StudyLink</a><p>Conectando estudantes</p><p>Com Firebase, conecte estudantes em tempo real.</p></footer>
     <div id="profile-modal" class="modal-backdrop" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close" aria-label="Fechar">×</button><div id="modal-content"></div></section></div>
     <div id="toast" class="toast" role="status" hidden></div>
     <script type="module" src="script.js"></script>
