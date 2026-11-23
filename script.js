@@ -122,6 +122,7 @@ let onlineDirectMessages = [];
 let activeDirectConversationId = null;
 let stopDirectMessages = () => {};
 let stopRoomMessages = () => {};
+let stopOnlineRooms = () => {};
 const subjectFilter = document.querySelector("#subject-filter");
 const groupSubject = document.querySelector('#group-form select[name="subject"]');
 subjects.forEach((subject) => {
@@ -535,13 +536,16 @@ if (firebaseReady) {
     session = user;
     document.querySelector("#auth-button").textContent = user ? "Sair" : "Entrar";
     renderDirectChat();
+    stopOnlineRooms();
+    stopOnlineRooms = () => {};
+    if (!user) { groups = []; renderGroups(); return; }
+    stopOnlineRooms = watchRooms((onlineRooms) => {
+      groups = onlineRooms.map((room) => ({
+        ...room, owner: room.ownerName, members: room.memberCount || 0, limit: room.limit || 20,
+      }));
+      renderGroups();
+    }, () => showToast("Não foi possível carregar as salas online. Verifique as regras do Firebase."));
   });
-  watchRooms((onlineRooms) => {
-    groups = onlineRooms.map((room) => ({
-      ...room, owner: room.ownerName, members: room.memberCount || 0, limit: room.limit || 20,
-    }));
-    renderGroups();
-  }, () => showToast("Não foi possível carregar as salas online. Verifique as regras do Firebase."));
 } else if (session) document.querySelector("#auth-button").textContent = "Sair";
 renderStudents();
 renderGroups();
