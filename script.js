@@ -97,6 +97,20 @@ let groups = loadData("studylink.groups", initialGroups);
 let requests = loadData("studylink.requests", []);
 let chats = loadData("studylink.chats", {});
 let session = loadData("studylink.session", null);
+
+const directChatUsers = [
+  { id: "eduardo", name: "Eduardo Schwertz", initials: "ES", course: "Engenharia de Software", semester: "4º semestre", tone: "purple" },
+  { id: "laura", name: "Laura Menezes", initials: "LM", course: "Engenharia Civil", semester: "2º semestre", tone: "teal" },
+];
+const initialDirectMessages = [
+  { id: 1, senderId: "laura", text: "Oi, Eduardo! Vi que você pode ajudar com Scrum. Você também estuda Cálculo I?", time: "14:08" },
+  { id: 2, senderId: "eduardo", text: "Oi, Laura! Sim, estou revisando limites e derivadas esta semana. Podemos estudar juntos.", time: "14:10" },
+  { id: 3, senderId: "laura", text: "Ótimo! Tenho dificuldade justamente nas derivadas. Que tal começarmos pela lista 2?", time: "14:12" },
+];
+const directChatStorageKey = "studylink.direct-chat-v1";
+const validDirectMessages = (value) => Array.isArray(value) && value.every((message) => message && typeof message.text === "string" && directChatUsers.some((user) => user.id === message.senderId));
+let directMessages = validDirectMessages(loadData(directChatStorageKey, initialDirectMessages)) ? loadData(directChatStorageKey, initialDirectMessages) : [...initialDirectMessages];
+let activeDirectUserId = "eduardo";
 const subjectFilter = document.querySelector("#subject-filter");
 const groupSubject = document.querySelector('#group-form select[name="subject"]');
 subjects.forEach((subject) => {
@@ -111,6 +125,14 @@ const emptyStudents = document.querySelector("#empty-students");
 const modal = document.querySelector("#profile-modal");
 const modalContent = document.querySelector("#modal-content");
 const toast = document.querySelector("#toast");
+const directChatUserSelect = document.querySelector("#direct-chat-user-select");
+const directMessagesElement = document.querySelector("#direct-chat-messages");
+const directChatTitle = document.querySelector("#direct-chat-title");
+const directChatSubtitle = document.querySelector("#direct-chat-subtitle");
+const directChatHint = document.querySelector("#direct-chat-hint");
+const directContactStatus = document.querySelector("#direct-chat-contact-status");
+const directContactAvatar = document.querySelector("#direct-chat-contact-avatar");
+const directContactName = document.querySelector("#direct-chat-contact-name");
 
 function escapeHTML(value) {
   return String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -145,7 +167,7 @@ function renderStudents() {
         <div class="chips">${student.subjectLabels.map((label) => `<span class="chip subject-chip">${escapeHTML(label)}</span>`).join("")}</div>
         <div class="chips" style="margin-top:.35rem">${student.interests.map(chip).join("")}</div>
       </div>
-      <button class="button button-secondary button-small" data-open-student="${student.id}">Ver perfil</button>
+      <div class="student-card-actions"><button class="button button-secondary button-small" data-open-student="${student.id}">Ver perfil</button>${student.id === "laura" ? `<button class="button button-primary button-small" data-open-direct-chat>Conversar</button>` : ""}</div>
     </article>`).join("");
 }
 
@@ -179,7 +201,41 @@ function openStudent(student) {
     <p>${escapeHTML(student.bio)}</p>
     <div class="modal-section"><h3>Disciplinas</h3><div class="chips">${student.subjectLabels.map((label) => `<span class="chip subject-chip">${escapeHTML(label)}</span>`).join("")}</div></div>
     <div class="modal-section"><h3>Conteúdos declarados</h3><div class="chips">${student.interests.map(chip).join("")}</div></div>
-    <div class="modal-actions"><button class="button button-secondary" data-close-modal>Fechar</button></div>`);
+    <div class="modal-actions">${student.id === "laura" ? `<button class="button button-primary" data-open-direct-chat>Conversar com Laura</button>` : ""}<button class="button button-secondary" data-close-modal>Fechar</button></div>`);
+}
+
+function currentDirectUser() {
+  return directChatUsers.find((user) => user.id === activeDirectUserId);
+}
+
+function directPartner() {
+  return directChatUsers.find((user) => user.id !== activeDirectUserId);
+}
+
+function renderDirectChat() {
+  const currentUser = currentDirectUser();
+  const partner = directPartner();
+  directChatUserSelect.innerHTML = directChatUsers.map((user) => `<option value="${user.id}">${escapeHTML(user.name)}</option>`).join("");
+  directChatUserSelect.value = currentUser.id;
+  directChatTitle.textContent = partner.name;
+  directChatSubtitle.textContent = `${partner.course} · ${partner.semester}`;
+  directContactAvatar.className = `avatar ${partner.tone}`;
+  directContactAvatar.textContent = partner.initials;
+  directContactName.textContent = partner.name;
+  directContactStatus.textContent = currentUser.id === "eduardo" ? "Conversa sobre Cálculo I" : "Conversa com Eduardo";
+  directChatHint.textContent = `${currentUser.name.split(" ")[0]} enviará a próxima mensagem.`;
+  directMessagesElement.innerHTML = `<div class="direct-chat-date"><span>Hoje</span></div>${directMessages.map((message) => {
+    const sender = directChatUsers.find((user) => user.id === message.senderId);
+    const own = message.senderId === currentUser.id;
+    return `<article class="direct-chat-message ${own ? "own" : "other"}"><span>${escapeHTML(own ? "Você" : sender.name.split(" ")[0])}</span><p>${escapeHTML(message.text)}</p><time>${escapeHTML(message.time)}</time></article>`;
+  }).join("")}`;
+  directMessagesElement.scrollTop = directMessagesElement.scrollHeight;
+}
+
+function openDirectChat() {
+  closeModal();
+  document.querySelector("#mensagens").scrollIntoView({ behavior: "smooth", block: "start" });
+  window.setTimeout(() => document.querySelector("#direct-chat-input").focus(), 500);
 }
 
 function openGroup(group) {
@@ -256,14 +312,41 @@ document.querySelector("#group-form").addEventListener("submit", (event) => {
   showToast("Grupo criado e salvo neste navegador.");
 });
 
+directChatUserSelect.addEventListener("change", (event) => {
+  activeDirectUserId = event.target.value;
+  renderDirectChat();
+});
+
+document.querySelector("#direct-chat-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const input = document.querySelector("#direct-chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+  directMessages.push({ id: Date.now(), senderId: activeDirectUserId, text, time: new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date()) });
+  saveData(directChatStorageKey, directMessages);
+  input.value = "";
+  renderDirectChat();
+  input.focus();
+});
+
+document.querySelector("#reset-direct-chat").addEventListener("click", () => {
+  directMessages = [...initialDirectMessages];
+  activeDirectUserId = "eduardo";
+  saveData(directChatStorageKey, directMessages);
+  renderDirectChat();
+  showToast("Conversa restaurada para as mensagens da demonstração.");
+});
+
 document.addEventListener("click", (event) => {
   const studentButton = event.target.closest("[data-open-student]");
   const groupButton = event.target.closest("[data-open-group]");
   const requestButton = event.target.closest("[data-request-group]");
   const chatButton = event.target.closest("[data-open-chat]");
+  const directChatButton = event.target.closest("[data-open-direct-chat]");
   if (studentButton) openStudent(students.find((student) => student.id === studentButton.dataset.openStudent));
   if (groupButton) openGroup(groups.find((group) => group.id === groupButton.dataset.openGroup));
   if (chatButton) openChat(chatButton.dataset.openChat);
+  if (directChatButton) openDirectChat();
   if (requestButton) {
     const group = groups.find((item) => item.id === requestButton.dataset.requestGroup);
     const alreadySent = requests.some((request) => request.groupId === group.id && request.email === (session?.email || "visitante@studylink.local"));
@@ -337,3 +420,4 @@ if (session) document.querySelector("#auth-button").textContent = "Sair";
 renderStudents();
 renderGroups();
 renderRequests();
+renderDirectChat();

@@ -18,6 +18,7 @@
       <nav id="site-nav" class="site-nav" aria-label="Navegação principal">
         <a href="#como-funciona">Como funciona</a>
         <a href="#encontrar">Encontrar estudantes</a>
+        <a href="#mensagens">Mensagens</a>
         <a href="#grupos">Grupos</a>
         <a href="#arquitetura">Arquitetura</a>
         <a href="#solicitacoes">Solicitações</a>
@@ -90,6 +91,35 @@
             <div class="results-heading"><span id="results-count">4 estudantes encontrados</span><span>Atualizado agora</span></div>
             <div id="student-list" class="student-list"></div>
             <p id="empty-students" class="empty-state" hidden>Nenhum estudante encontrado. Tente mudar os filtros.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="mensagens" class="section chat-section">
+        <div class="section-heading">
+          <div><p class="eyebrow">Mensagens diretas</p><h2>Combine os detalhes do estudo em uma conversa.</h2><p>Uma demonstração de chat entre dois usuários do StudyLink. Troque de perfil para testar os dois lados da conversa.</p></div>
+          <button class="button button-secondary button-small" id="reset-direct-chat" type="button">Restaurar conversa</button>
+        </div>
+        <div class="direct-chat-demo card">
+          <aside class="direct-chat-sidebar" aria-label="Conversas">
+            <div class="direct-chat-account">
+              <span class="direct-chat-account-label">Você está usando como</span>
+              <label class="sr-only" for="direct-chat-user-select">Perfil ativo</label>
+              <select id="direct-chat-user-select"></select>
+            </div>
+            <div class="direct-chat-contact" aria-current="page">
+              <span id="direct-chat-contact-avatar" class="avatar teal">LM</span>
+              <div><strong id="direct-chat-contact-name">Laura Menezes</strong><small id="direct-chat-contact-status">Conversa sobre Cálculo I</small></div>
+            </div>
+          </aside>
+          <div class="direct-chat-panel">
+            <header class="direct-chat-header"><div><h3 id="direct-chat-title">Laura Menezes</h3><p id="direct-chat-subtitle">Engenharia Civil · 2º semestre</p></div><span class="direct-chat-topic">Cálculo I</span></header>
+            <div id="direct-chat-messages" class="direct-chat-messages" aria-live="polite" aria-label="Mensagens da conversa"></div>
+            <form id="direct-chat-form" class="direct-chat-composer">
+              <label class="sr-only" for="direct-chat-input">Escreva uma mensagem</label>
+              <textarea id="direct-chat-input" maxlength="280" rows="2" placeholder="Escreva uma mensagem..." required></textarea>
+              <div class="direct-chat-composer-footer"><span id="direct-chat-hint">Eduardo enviará a próxima mensagem.</span><button class="button button-primary" type="submit">Enviar <span>→</span></button></div>
+            </form>
           </div>
         </div>
       </section>
