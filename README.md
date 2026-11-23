@@ -1,29 +1,27 @@
 # StudyLink
 
-Site responsivo para aproximar estudantes por curso, disciplina e objetivo de estudo. O MVP inicial está preservado em [`mvp-sprint-2/`](mvp-sprint-2/). A versão atual evolui o fluxo demonstrativo das Sprints 3 e 4.
+Site responsivo para aproximar estudantes por curso, disciplina e objetivo de estudo. O MVP inicial está preservado em [`mvp-sprint-2/`](mvp-sprint-2/). A versão atual evolui o fluxo demonstrativo das Sprints 3 e 4 e está pronta para usar Firebase em dois dispositivos.
 
 ## Como abrir
 
-Abra `index.html` em um navegador moderno. Não precisa instalar ferramentas. Grupos, pedidos e sessão ficam salvos no armazenamento local do navegador.
+Abra `index.html` em um navegador moderno. Sem o Firebase configurado, o projeto continua funcionando como demonstração local. Com o Firebase, salas, contas e conversas passam a funcionar entre dispositivos.
 
 ## O que dá para demonstrar
 
 - Cursos e matérias de áreas como software, jogos, Direito e Medicina/Psiquiatria.
 - Busca de perfis por disciplina e interesse.
 - Criação de grupo, pedido de entrada, aprovação e recusa.
-- Chat demonstrativo dentro do grupo, com histórico salvo neste navegador.
-- Conversa direta entre Eduardo e Laura, com troca de perfil para demonstrar os dois lados do chat.
+- Criação e descoberta de salas por matéria em tempo real.
+- Entrada na sala e chat compartilhado entre dispositivos.
+- Contas por e-mail/senha e mensagens diretas encontrando a outra pessoa pelo e-mail.
 - O criador aparece como administrador/membro do grupo e não precisa solicitar acesso.
 - Perfil e sessão demonstrativa.
 
-O acesso não é autenticação real, e os dados não são compartilhados entre dispositivos. Não use dados sensíveis. Uso real requer API HTTPS, banco de dados e validação no servidor.
+Não envie dados sensíveis. As regras de acesso já estão no repositório, mas precisam ser publicadas no Firebase antes do uso online.
 
-## Como testar a conversa direta
+## Publicar e testar em dois dispositivos
 
-1. Abra `index.html` e entre em **Mensagens** — ou clique em **Conversar** no cartão da Laura.
-2. Com **Eduardo Schwertz** selecionado, envie uma mensagem.
-3. No seletor “Você está usando como”, escolha **Laura Menezes** e envie a resposta.
-4. Volte para Eduardo para conferir as duas mensagens. Use **Restaurar conversa** para voltar ao estado inicial.
+Siga o guia de [configuração do Firebase e demonstração entre duas pessoas](docs/firebase.md). Ele inclui a criação do projeto, regras de segurança, publicação no GitHub Pages e o teste da sala e das mensagens diretas.
 
 ## Documentação
 

@@ -1,3 +1,9 @@
+import {
+  createOnlineRoom, findProfileByEmail, firebaseReady, joinOnlineRoom, openDirectConversation,
+  registerAccount, sendDirectMessage, sendRoomMessage, signInAccount, signOutAccount,
+  watchDirectMessages, watchRoomMessages, watchRooms, watchSession,
+} from "./firebase-service.js";
+
 // Catálogo de cursos e matérias usado nos filtros e formulários.
 const courses = ["Engenharia de Software", "Análise e Desenvolvimento de Sistemas", "Desenvolvimento de Jogos", "Advocacia / Direito", "Psiquiatria / Medicina", "Administração", "Psicologia", "Engenharia Civil", "Ciência da Computação"];
 const subjects = [
@@ -111,6 +117,11 @@ const directChatStorageKey = "studylink.direct-chat-v1";
 const validDirectMessages = (value) => Array.isArray(value) && value.every((message) => message && typeof message.text === "string" && directChatUsers.some((user) => user.id === message.senderId));
 let directMessages = validDirectMessages(loadData(directChatStorageKey, initialDirectMessages)) ? loadData(directChatStorageKey, initialDirectMessages) : [...initialDirectMessages];
 let activeDirectUserId = "eduardo";
+let directRecipient = null;
+let onlineDirectMessages = [];
+let activeDirectConversationId = null;
+let stopDirectMessages = () => {};
+let stopRoomMessages = () => {};
 const subjectFilter = document.querySelector("#subject-filter");
 const groupSubject = document.querySelector('#group-form select[name="subject"]');
 subjects.forEach((subject) => {
@@ -188,6 +199,8 @@ function showModal(content) {
 }
 
 function closeModal() {
+  stopRoomMessages();
+  stopRoomMessages = () => {};
   modal.hidden = true;
   document.body.style.overflow = "";
 }
@@ -213,6 +226,25 @@ function directPartner() {
 }
 
 function renderDirectChat() {
+  if (firebaseReady) {
+    directChatUserSelect.innerHTML = session ? `<option>${escapeHTML(session.name)}</option>` : "<option>Entre para conversar</option>";
+    directChatUserSelect.disabled = true;
+    const partner = directRecipient;
+    directChatTitle.textContent = partner ? partner.name : "Escolha uma pessoa";
+    directChatSubtitle.textContent = partner ? `${partner.course || "Curso não informado"} · ${partner.email}` : "Informe o e-mail da conta da outra pessoa";
+    directContactAvatar.className = "avatar teal";
+    directContactAvatar.textContent = partner ? partner.name.split(" ").map((part) => part[0]).slice(0, 2).join("") : "?";
+    directContactName.textContent = partner ? partner.name : "Nenhuma conversa selecionada";
+    directContactStatus.textContent = session ? "Conectado em tempo real" : "Entre para iniciar uma conversa";
+    directChatHint.textContent = session && partner ? `${session.name.split(" ")[0]} enviará a próxima mensagem.` : "Use o botão Entrar para acessar sua conta.";
+    directMessagesElement.innerHTML = partner ? `<div class="direct-chat-date"><span>Conversa privada</span></div>${onlineDirectMessages.map((message) => {
+      const own = message.senderId === session?.uid;
+      const time = message.createdAt?.toDate ? new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(message.createdAt.toDate()) : "agora";
+      return `<article class="direct-chat-message ${own ? "own" : "other"}"><span>${escapeHTML(own ? "Você" : message.senderName)}</span><p>${escapeHTML(message.text)}</p><time>${time}</time></article>`;
+    }).join("")}` : '<p class="meta">Informe o e-mail da pessoa com quem deseja conversar.</p>';
+    directMessagesElement.scrollTop = directMessagesElement.scrollHeight;
+    return;
+  }
   const currentUser = currentDirectUser();
   const partner = directPartner();
   directChatUserSelect.innerHTML = directChatUsers.map((user) => `<option value="${user.id}">${escapeHTML(user.name)}</option>`).join("");
@@ -235,26 +267,39 @@ function renderDirectChat() {
 function openDirectChat() {
   closeModal();
   document.querySelector("#mensagens").scrollIntoView({ behavior: "smooth", block: "start" });
-  window.setTimeout(() => document.querySelector("#direct-chat-input").focus(), 500);
+  window.setTimeout(() => document.querySelector(firebaseReady ? "#direct-recipient-email" : "#direct-chat-input").focus(), 500);
 }
 
 function openGroup(group) {
-  const isOwner = group.ownerEmail === session?.email || (!group.ownerEmail && group.owner === (session?.name || "Eduardo Schwertz"));
+  const onlineRoom = firebaseReady && Boolean(group.ownerId);
+  const isOwner = onlineRoom ? group.ownerId === session?.uid : group.ownerEmail === session?.email || (!group.ownerEmail && group.owner === (session?.name || "Eduardo Schwertz"));
   const full = group.members >= group.limit;
   const userEmail = session?.email || "eduardo@studylink.local";
-  const isMember = isOwner || requests.some((request) => request.groupId === group.id && request.email === userEmail && request.status === "Aprovada");
+  const isMember = onlineRoom ? (group.memberIds || []).includes(session?.uid) : isOwner || requests.some((request) => request.groupId === group.id && request.email === userEmail && request.status === "Aprovada");
   showModal(`
     <span class="chip subject-chip">${escapeHTML(group.subject)}</span>
     <h2 id="modal-title" style="margin-top:.7rem">${escapeHTML(group.name)}</h2>
     <p>${escapeHTML(group.objective)}</p>
     <div class="modal-section"><h3>Organização</h3><p>Administrado por <strong>${escapeHTML(group.owner)}</strong>. Há ${group.members} de ${group.limit} vagas ocupadas.</p></div>
-    <div class="modal-section"><h3>Como entrar</h3><p>${isOwner ? "Você criou este grupo e já é seu organizador. Não precisa pedir acesso." : "Envie uma solicitação para que o organizador possa avaliar sua participação."}</p></div>
-    <div class="modal-actions">${isMember ? `<button class="button button-primary" data-open-chat="${group.id}">Abrir chat</button>` : ""}${isOwner ? `<span class="request-state">Seu grupo · administrador</span>` : full ? `<button class="button button-secondary" disabled>Grupo completo</button>` : `<button class="button button-primary" data-request-group="${group.id}">Solicitar participação</button>`}<button class="button button-secondary" data-close-modal>Fechar</button></div>`);
+    <div class="modal-section"><h3>Como entrar</h3><p>${isOwner ? "Você criou esta sala e já é seu organizador." : onlineRoom ? "Entre na sala para conversar com os demais membros em tempo real." : "Envie uma solicitação para que o organizador possa avaliar sua participação."}</p></div>
+    <div class="modal-actions">${isMember ? `<button class="button button-primary" data-open-chat="${group.id}">Abrir chat</button>` : ""}${isOwner ? `<span class="request-state">Sua sala · administrador</span>` : full ? `<button class="button button-secondary" disabled>Sala cheia</button>` : onlineRoom ? `<button class="button button-primary" data-join-online-room="${group.id}">Entrar na sala</button>` : `<button class="button button-primary" data-request-group="${group.id}">Solicitar participação</button>`}<button class="button button-secondary" data-close-modal>Fechar</button></div>`);
 }
 
 
 function openChat(groupId) {
   const group = groups.find((item) => item.id === groupId);
+  if (firebaseReady && group?.ownerId) {
+    if (!session?.uid || !(group.memberIds || []).includes(session.uid)) { showToast("Entre na sala antes de abrir o chat."); return; }
+    stopRoomMessages();
+    showModal(`<h2 id="modal-title">Chat · ${escapeHTML(group.name)}</h2><p>Conversa da sala em tempo real.</p><div id="online-room-messages" class="chat-messages"><p class="meta">Carregando mensagens…</p></div><form id="online-room-chat-form" class="chat-form" data-chat-group="${escapeHTML(groupId)}"><label for="online-room-message">Mensagem</label><textarea id="online-room-message" name="message" maxlength="500" placeholder="Escreva uma mensagem para a sala..." required></textarea><div class="modal-actions"><button class="button button-secondary" type="button" data-back-to-group="${escapeHTML(groupId)}">Voltar à sala</button><button class="button button-primary" type="submit">Enviar</button></div></form>`);
+    stopRoomMessages = watchRoomMessages(groupId, (messages) => {
+      const element = document.querySelector("#online-room-messages");
+      if (!element) return;
+      element.innerHTML = messages.length ? messages.map((message) => `<article class="chat-message"><strong>${escapeHTML(message.senderName)}</strong><p>${escapeHTML(message.text)}</p><small>${message.createdAt?.toDate ? message.createdAt.toDate().toLocaleString("pt-BR") : "agora"}</small></article>`).join("") : '<p class="meta">Ainda não há mensagens. Comece a conversa!</p>';
+      element.scrollTop = element.scrollHeight;
+    }, () => showToast("Não foi possível carregar as mensagens da sala."));
+    return;
+  }
   const messages = chats[groupId] || [];
   showModal(`<h2 id="modal-title">Chat · ${escapeHTML(group.name)}</h2><p>Conversa demonstrativa do grupo. As mensagens ficam salvas neste navegador.</p><div class="chat-messages">${messages.length ? messages.map((message) => `<article class="chat-message"><strong>${escapeHTML(message.name)}</strong><p>${escapeHTML(message.text)}</p><small>${escapeHTML(message.time)}</small></article>`).join("") : '<p class="meta">Ainda não há mensagens. Comece a conversa!</p>'}</div><form id="chat-form" class="chat-form" data-chat-group="${escapeHTML(groupId)}"><label for="chat-message">Mensagem</label><textarea id="chat-message" name="message" maxlength="500" placeholder="Escreva uma mensagem para o grupo..." required></textarea><div class="modal-actions"><button class="button button-secondary" type="button" data-back-to-group="${escapeHTML(groupId)}">Voltar ao grupo</button><button class="button button-primary" type="submit">Enviar</button></div></form>`);
 }
@@ -287,7 +332,7 @@ document.querySelector("#cancel-group-form").addEventListener("click", () => {
   document.querySelector("#open-group-form").hidden = false;
 });
 
-document.querySelector("#group-form").addEventListener("submit", (event) => {
+document.querySelector("#group-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
   const group = {
@@ -300,6 +345,17 @@ document.querySelector("#group-form").addEventListener("submit", (event) => {
     members: 1,
     limit: Number(data.get("limit")),
   };
+  if (firebaseReady) {
+    if (!session?.uid) { showToast("Entre na sua conta para criar uma sala online."); return; }
+    try {
+      await createOnlineRoom(group, session);
+      event.currentTarget.reset();
+      document.querySelector("#group-form-wrap").hidden = true;
+      document.querySelector("#open-group-form").hidden = false;
+      showToast("Sala criada. Ela já pode ser encontrada em outro dispositivo.");
+    } catch (error) { showToast(error.message || "Não foi possível criar a sala."); }
+    return;
+  }
   groups.unshift(group);
   chats[group.id] = [{ name: group.owner, text: "Bem-vindos ao grupo! Vamos combinar nossos estudos por aqui.", time: new Date().toLocaleString("pt-BR") }];
   saveData("studylink.chats", chats);
@@ -313,15 +369,39 @@ document.querySelector("#group-form").addEventListener("submit", (event) => {
 });
 
 directChatUserSelect.addEventListener("change", (event) => {
+  if (firebaseReady) return;
   activeDirectUserId = event.target.value;
   renderDirectChat();
 });
 
-document.querySelector("#direct-chat-form").addEventListener("submit", (event) => {
+document.querySelector("#direct-recipient-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!firebaseReady) { showToast("Configure o Firebase para conversar entre dispositivos."); return; }
+  if (!session?.uid) { showToast("Entre na sua conta antes de iniciar uma conversa."); return; }
+  const email = document.querySelector("#direct-recipient-email").value.trim().toLowerCase();
+  if (!email) return;
+  try {
+    const found = await findProfileByEmail(email);
+    if (!found) { showToast("Nenhuma conta encontrada com esse e-mail."); return; }
+    if (found.uid === session.uid) { showToast("Escolha a conta da outra pessoa."); return; }
+    directRecipient = found;
+    activeDirectConversationId = await openDirectConversation(session, found);
+    stopDirectMessages();
+    stopDirectMessages = watchDirectMessages(activeDirectConversationId, (messages) => { onlineDirectMessages = messages; renderDirectChat(); }, () => showToast("Não foi possível carregar esta conversa."));
+    renderDirectChat();
+  } catch (error) { showToast(error.message || "Não foi possível abrir a conversa."); }
+});
+
+document.querySelector("#direct-chat-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const input = document.querySelector("#direct-chat-input");
   const text = input.value.trim();
   if (!text) return;
+  if (firebaseReady) {
+    if (!session?.uid || !activeDirectConversationId) { showToast("Escolha uma pessoa para iniciar a conversa."); return; }
+    try { await sendDirectMessage(activeDirectConversationId, session, text); input.value = ""; } catch (error) { showToast(error.message || "Não foi possível enviar a mensagem."); }
+    return;
+  }
   directMessages.push({ id: Date.now(), senderId: activeDirectUserId, text, time: new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date()) });
   saveData(directChatStorageKey, directMessages);
   input.value = "";
@@ -330,6 +410,7 @@ document.querySelector("#direct-chat-form").addEventListener("submit", (event) =
 });
 
 document.querySelector("#reset-direct-chat").addEventListener("click", () => {
+  if (firebaseReady) { onlineDirectMessages = []; directRecipient = null; activeDirectConversationId = null; stopDirectMessages(); stopDirectMessages = () => {}; renderDirectChat(); return; }
   directMessages = [...initialDirectMessages];
   activeDirectUserId = "eduardo";
   saveData(directChatStorageKey, directMessages);
@@ -337,16 +418,25 @@ document.querySelector("#reset-direct-chat").addEventListener("click", () => {
   showToast("Conversa restaurada para as mensagens da demonstração.");
 });
 
-document.addEventListener("click", (event) => {
+document.addEventListener("click", async (event) => {
   const studentButton = event.target.closest("[data-open-student]");
   const groupButton = event.target.closest("[data-open-group]");
   const requestButton = event.target.closest("[data-request-group]");
   const chatButton = event.target.closest("[data-open-chat]");
   const directChatButton = event.target.closest("[data-open-direct-chat]");
+  const joinOnlineRoomButton = event.target.closest("[data-join-online-room]");
   if (studentButton) openStudent(students.find((student) => student.id === studentButton.dataset.openStudent));
   if (groupButton) openGroup(groups.find((group) => group.id === groupButton.dataset.openGroup));
   if (chatButton) openChat(chatButton.dataset.openChat);
   if (directChatButton) openDirectChat();
+  if (joinOnlineRoomButton) {
+    if (!session?.uid) { showToast("Entre na sua conta para participar da sala."); return; }
+    try {
+      await joinOnlineRoom(joinOnlineRoomButton.dataset.joinOnlineRoom, session);
+      closeModal();
+      showToast("Você entrou na sala. Agora o chat está disponível.");
+    } catch (error) { showToast(error.message || "Não foi possível entrar na sala."); }
+  }
   if (requestButton) {
     const group = groups.find((item) => item.id === requestButton.dataset.requestGroup);
     const alreadySent = requests.some((request) => request.groupId === group.id && request.email === (session?.email || "visitante@studylink.local"));
@@ -374,12 +464,36 @@ function renderRequests() {
 }
 
 document.querySelector("#auth-button").addEventListener("click", () => {
+  if (firebaseReady) {
+    if (session?.uid) { signOutAccount().catch((error) => showToast(error.message || "Não foi possível sair.")); return; }
+    showModal(`<h2 id="modal-title">Entrar no StudyLink</h2><p>Crie sua conta uma única vez. Depois, seu amigo poderá encontrar você pelo e-mail para iniciar uma conversa direta.</p><form id="online-auth-form" class="auth-form"><label>Seu nome<input name="name" required maxlength="60" placeholder="Como podemos chamar você?"></label><label>E-mail<input name="email" type="email" required placeholder="voce@email.com"></label><label>Curso<select name="course" required>${courses.map((course) => `<option>${escapeHTML(course)}</option>`).join("")}</select></label><label>Senha<input name="password" type="password" required minlength="6" autocomplete="current-password"></label><div class="modal-actions"><button class="button button-secondary" type="submit" name="mode" value="login">Entrar</button><button class="button button-primary" type="submit" name="mode" value="register">Criar conta</button></div></form>`);
+    return;
+  }
   if (session) { session = null; localStorage.removeItem("studylink.session"); document.querySelector("#auth-button").textContent = "Entrar"; renderRequests(); showToast("Você saiu da sessão demonstrativa."); return; }
   showModal(`<h2 id="modal-title">Entrar no StudyLink</h2><p class="demo-note">Acesso demonstrativo: a sessão é salva apenas neste navegador. Este formulário não envia nem armazena senhas; para login real é necessária a API planejada na Sprint 2.</p><form id="auth-form" class="auth-form"><label>Seu nome<input name="name" required maxlength="60" placeholder="Como podemos chamar você?"></label><label>E-mail acadêmico<input name="email" type="email" required placeholder="voce@universidade.edu"></label><label>Curso<select name="course" required>${courses.map((course) => `<option>${escapeHTML(course)}</option>`).join("")}</select></label><label>Senha (apenas demonstração)<input name="password" type="password" required minlength="6" autocomplete="current-password"></label><div class="modal-actions"><button class="button button-primary" type="submit">Acessar demonstração</button></div></form>`);
 });
 
-document.addEventListener("submit", (event) => {
+document.addEventListener("submit", async (event) => {
+  if (event.target.id === "online-auth-form") {
+    event.preventDefault();
+    const data = new FormData(event.target, event.submitter);
+    const values = { name: String(data.get("name")).trim(), email: String(data.get("email")).trim(), password: String(data.get("password")), course: String(data.get("course")) };
+    try {
+      session = data.get("mode") === "register" ? await registerAccount(values) : await signInAccount(values.email, values.password);
+      document.querySelector("#auth-button").textContent = "Sair";
+      closeModal(); renderDirectChat(); showToast(`Olá, ${session.name}! Sua conta está conectada.`);
+    } catch (error) { showToast(error.message || "Não foi possível acessar sua conta."); }
+    return;
+  }
   if (event.target.id === "auth-form") { event.preventDefault(); const data = new FormData(event.target); session = {name:String(data.get("name")).trim(),email:String(data.get("email")).trim().toLowerCase(),course:String(data.get("course"))}; saveData("studylink.session", session); document.querySelector("#auth-button").textContent = "Sair"; closeModal(); renderRequests(); showToast(`Olá, ${session.name}! Sua sessão demonstrativa está ativa.`); }
+  if (event.target.id === "online-room-chat-form") {
+    event.preventDefault();
+    const groupId = event.target.dataset.chatGroup;
+    const text = String(new FormData(event.target).get("message")).trim();
+    if (!text || !session?.uid) return;
+    try { await sendRoomMessage(groupId, session, text); event.target.reset(); } catch (error) { showToast(error.message || "Não foi possível enviar a mensagem."); }
+    return;
+  }
   if (event.target.id === "chat-form") {
     event.preventDefault();
     const groupId = event.target.dataset.chatGroup;
@@ -416,7 +530,19 @@ navToggle.addEventListener("click", () => {
 });
 nav.addEventListener("click", () => { nav.classList.remove("open"); navToggle.setAttribute("aria-expanded", "false"); });
 
-if (session) document.querySelector("#auth-button").textContent = "Sair";
+if (firebaseReady) {
+  watchSession((user) => {
+    session = user;
+    document.querySelector("#auth-button").textContent = user ? "Sair" : "Entrar";
+    renderDirectChat();
+  });
+  watchRooms((onlineRooms) => {
+    groups = onlineRooms.map((room) => ({
+      ...room, owner: room.ownerName, members: room.memberCount || 0, limit: room.limit || 20,
+    }));
+    renderGroups();
+  }, () => showToast("Não foi possível carregar as salas online. Verifique as regras do Firebase."));
+} else if (session) document.querySelector("#auth-button").textContent = "Sair";
 renderStudents();
 renderGroups();
 renderRequests();

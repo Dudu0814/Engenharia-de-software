@@ -97,7 +97,7 @@
 
       <section id="mensagens" class="section chat-section">
         <div class="section-heading">
-          <div><p class="eyebrow">Mensagens diretas</p><h2>Combine os detalhes do estudo em uma conversa.</h2><p>Uma demonstração de chat entre dois usuários do StudyLink. Troque de perfil para testar os dois lados da conversa.</p></div>
+          <div><p class="eyebrow">Mensagens diretas</p><h2>Combine os detalhes do estudo em uma conversa.</h2><p id="direct-chat-description">Cadastre duas contas para conversar de dispositivos diferentes em tempo real.</p></div>
           <button class="button button-secondary button-small" id="reset-direct-chat" type="button">Restaurar conversa</button>
         </div>
         <div class="direct-chat-demo card">
@@ -107,6 +107,11 @@
               <label class="sr-only" for="direct-chat-user-select">Perfil ativo</label>
               <select id="direct-chat-user-select"></select>
             </div>
+            <form id="direct-recipient-form" class="direct-recipient-form">
+              <label for="direct-recipient-email">E-mail da outra pessoa</label>
+              <input id="direct-recipient-email" type="email" placeholder="amigo@email.com" />
+              <button class="button button-secondary button-small" type="submit">Iniciar conversa</button>
+            </form>
             <div class="direct-chat-contact" aria-current="page">
               <span id="direct-chat-contact-avatar" class="avatar teal">LM</span>
               <div><strong id="direct-chat-contact-name">Laura Menezes</strong><small id="direct-chat-contact-status">Conversa sobre Cálculo I</small></div>
@@ -155,9 +160,9 @@
       <section class="cta-section"><div><p class="eyebrow">Pronto para conectar?</p><h2>Menos busca, mais aprendizado compartilhado.</h2></div><a class="button button-light" href="#encontrar">Explorar estudantes <span>→</span></a></section>
     </main>
 
-    <footer><a class="brand" href="#inicio"><span class="brand-mark">S</span>StudyLink</a><p>MVP acadêmico · Engenharia de Software</p><p>Protótipo local: os dados ficam neste navegador.</p></footer>
+    <footer><a class="brand" href="#inicio"><span class="brand-mark">S</span>StudyLink</a><p>MVP acadêmico · Engenharia de Software</p><p>Com Firebase, conecte estudantes em tempo real.</p></footer>
     <div id="profile-modal" class="modal-backdrop" hidden><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><button class="modal-close" aria-label="Fechar">×</button><div id="modal-content"></div></section></div>
     <div id="toast" class="toast" role="status" hidden></div>
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
   </body>
 </html>
