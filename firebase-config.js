@@ -1,5 +1,3 @@
-// Cole aqui a configuração pública do seu aplicativo Web, obtida no Firebase Console.
-// Ela identifica o projeto; a proteção dos dados é feita pelas regras em firestore.rules.
 export const firebaseConfig = {
   apiKey: "AIzaSyB2GrNLYPwskAvRmLdmSeK0cCubIRqvi3g",
   authDomain: "engenharia-de-software-d72cc.firebaseapp.com",

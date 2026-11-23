@@ -4,7 +4,6 @@ import {
   watchDirectMessages, watchRoomMessages, watchRooms, watchSession,
 } from "./firebase-service.js";
 
-// Catálogo de cursos e matérias usado nos filtros e formulários.
 const courses = ["Engenharia de Software", "Análise e Desenvolvimento de Sistemas", "Desenvolvimento de Jogos", "Advocacia / Direito", "Psiquiatria / Medicina", "Administração", "Psicologia", "Engenharia Civil", "Ciência da Computação"];
 const subjects = [
   { id: "calculo", name: "Cálculo I" }, { id: "algoritmos", name: "Algoritmos e Lógica" },

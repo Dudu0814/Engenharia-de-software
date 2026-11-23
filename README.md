@@ -1,6 +1,6 @@
 # StudyLink
 
-Site responsivo para aproximar estudantes por curso, disciplina e objetivo de estudo. O MVP inicial está preservado em [`mvp-sprint-2/`](mvp-sprint-2/). A versão atual evolui o fluxo demonstrativo das Sprints 3 e 4 e está pronta para usar Firebase em dois dispositivos.
+Site responsivo para aproximar estudantes por curso, disciplina e objetivo de estudo. A versão final permite criar salas, encontrar colegas e conversar em tempo real entre dispositivos.
 
 ## Como abrir
 
@@ -23,10 +23,10 @@ Não envie dados sensíveis. As regras de acesso já estão no repositório, mas
 
 Siga o guia de [configuração do Firebase e demonstração entre duas pessoas](docs/firebase.md). Ele inclui a criação do projeto, regras de segurança, publicação no GitHub Pages e o teste da sala e das mensagens diretas.
 
-## Documentação
+## Documentação final
 
-- [Decisões arquiteturais da Sprint 2](docs/sprint-2/adrs/)
-- [Entrega da Sprint 3](docs/sprint-3/entrega.md)
-- [Entrega de interface da Sprint 4](docs/sprint-4/entrega.md)
-- [Próximos itens técnicos da Sprint 4](docs/sprint-4/plano.md)
-- [Preparação da Sprint 5](docs/sprint-5/plano.md)
+- [Versão final](docs/sprint-5/versao-final.md)
+- [Arquitetura](docs/sprint-5/arquitetura.md)
+- [Guia de uso](docs/sprint-5/guia-de-uso.md)
+- [Limitações e roadmap futuro](docs/sprint-5/limitacoes-e-roadmap.md)
+- [Retrospectiva](docs/sprint-5/retrospectiva.md)
