@@ -335,7 +335,8 @@ document.querySelector("#cancel-group-form").addEventListener("click", () => {
 
 document.querySelector("#group-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const data = new FormData(event.currentTarget);
+  const groupForm = event.currentTarget;
+  const data = new FormData(groupForm);
   const group = {
     id: `group-${Date.now()}`,
     name: String(data.get("name")).trim(),
@@ -350,7 +351,7 @@ document.querySelector("#group-form").addEventListener("submit", async (event) =
     if (!session?.uid) { showToast("Entre na sua conta para criar uma sala online."); return; }
     try {
       await createOnlineRoom(group, session);
-      event.currentTarget.reset();
+      groupForm.reset();
       document.querySelector("#group-form-wrap").hidden = true;
       document.querySelector("#open-group-form").hidden = false;
       showToast("Sala criada. Ela já pode ser encontrada em outro dispositivo.");
@@ -361,7 +362,7 @@ document.querySelector("#group-form").addEventListener("submit", async (event) =
   chats[group.id] = [{ name: group.owner, text: "Bem-vindos ao grupo! Vamos combinar nossos estudos por aqui.", time: new Date().toLocaleString("pt-BR") }];
   saveData("studylink.chats", chats);
   saveData("studylink.groups", groups);
-  event.currentTarget.reset();
+  groupForm.reset();
   document.querySelector("#group-form-wrap").hidden = true;
   document.querySelector("#open-group-form").hidden = false;
   renderGroups();
