@@ -58,7 +58,7 @@ export async function signOutAccount() {
   await signOut(auth);
 }
 
-export async function createOnlineRoom({ name, subject, objective, limit, owner }) {
+export async function createOnlineRoom({ name, subject, objective, limit }, owner) {
   requireFirebase();
   const room = await addDoc(collection(db, "rooms"), {
     name, subject, objective, limit, ownerName: owner.name, ownerId: owner.uid,
