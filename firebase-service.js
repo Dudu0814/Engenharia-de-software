@@ -5,7 +5,7 @@ import {
   signOut, updateProfile,
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js";
 import {
-  addDoc, arrayUnion, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, limit, onSnapshot, runTransaction,
+  addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, limit, onSnapshot, runTransaction,
   orderBy, query, serverTimestamp, setDoc, updateDoc, where,
 } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js";
 
@@ -82,16 +82,29 @@ export function watchRooms(callback, onError) {
   }, onError);
 }
 
+function addRoomMember(transaction, ref, room, uid, name) {
+  if (room.memberIds.includes(uid)) return;
+  if (room.memberIds.length >= room.limit) throw new Error("O grupo está cheio.");
+
+  const memberIds = [...room.memberIds, uid];
+  transaction.update(ref, {
+    memberIds,
+    memberNames: { ...room.memberNames, [uid]: name },
+    memberCount: memberIds.length,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export async function joinOnlineRoom(roomId, user) {
   const ref = doc(db, "rooms", roomId);
   await runTransaction(db, async (transaction) => {
     const room = await transaction.get(ref);
     if (!room.exists()) throw new Error("Este grupo não existe mais.");
     const data = room.data();
-    if ((data.memberIds || []).includes(user.uid)) return;
-    if (data.visibility === "private") throw new Error("Este grupo exige aprovação.");
-    if (data.memberIds.length >= data.limit) throw new Error("Este grupo está cheio.");
-    transaction.update(ref, { memberIds: [...data.memberIds, user.uid], memberNames: { ...(data.memberNames || {}), [user.uid]: user.name }, memberCount: data.memberIds.length + 1, updatedAt: serverTimestamp() });
+    if (data.visibility === "private" && !data.memberIds.includes(user.uid)) {
+      throw new Error("Este grupo exige aprovação.");
+    }
+    addRoomMember(transaction, ref, data, user.uid, user.name);
   });
 }
 
@@ -114,10 +127,7 @@ export async function decideRoomRequest(request, approved) {
     if (!roomSnap.exists()) throw new Error("Este grupo não existe mais.");
     const room = roomSnap.data();
     const currentRequest = requestSnap.data();
-    if (approved && !room.memberIds.includes(currentRequest.requesterId)) {
-      if (room.memberIds.length >= room.limit) throw new Error("O grupo está cheio.");
-      transaction.update(roomRef, { memberIds: [...room.memberIds, currentRequest.requesterId], memberNames: { ...(room.memberNames || {}), [currentRequest.requesterId]: currentRequest.name }, memberCount: room.memberIds.length + 1, updatedAt: serverTimestamp() });
-    }
+    if (approved) addRoomMember(transaction, roomRef, room, currentRequest.requesterId, currentRequest.name);
     transaction.update(requestRef, { status: approved ? "Aprovada" : "Recusada", updatedAt: serverTimestamp() });
   });
 }
@@ -165,15 +175,11 @@ function directConversationId(firstUserId, secondUserId) {
   return [firstUserId, secondUserId].sort().join("_");
 }
 
-async function ensureConversation(currentUser, recipient) {
+export async function openDirectConversation(currentUser, recipient) {
+  requireFirebase();
   const id = directConversationId(currentUser.uid, recipient.uid);
   await setDoc(doc(db, "directConversations", id), { participantIds: [currentUser.uid, recipient.uid], participantNames: { [currentUser.uid]: currentUser.name, [recipient.uid]: recipient.name }, updatedAt: serverTimestamp() }, { merge: true });
   return id;
-}
-
-export async function openDirectConversation(currentUser, recipient) {
-  requireFirebase();
-  return ensureConversation(currentUser, recipient);
 }
 
 export function watchDirectConversations(userId, callback, onError) {

@@ -4,97 +4,7 @@ import {
   watchDirectConversations, watchDirectMessages, watchRoomMessages, watchRoomRequests, watchRooms, watchSession,
 } from "./firebase-service.js";
 
-const courses = ["Engenharia de Software", "Análise e Desenvolvimento de Sistemas", "Desenvolvimento de Jogos", "Advocacia / Direito", "Psiquiatria / Medicina", "Administração", "Psicologia", "Engenharia Civil", "Ciência da Computação"];
-const subjects = [
-  { id: "calculo", name: "Cálculo I" }, { id: "algoritmos", name: "Algoritmos e Lógica" },
-  { id: "gestao", name: "Gestão de Projetos" }, { id: "banco", name: "Banco de Dados" },
-  { id: "programacao", name: "Programação Web" }, { id: "jogos", name: "Desenvolvimento de Jogos" },
-  { id: "ia", name: "Inteligência Artificial" }, { id: "direito-civil", name: "Direito Civil" },
-  { id: "direito-penal", name: "Direito Penal" }, { id: "constitucional", name: "Direito Constitucional" },
-  { id: "anatomia", name: "Anatomia e Fisiologia" }, { id: "psiquiatria", name: "Psiquiatria" },
-  { id: "psicologia", name: "Psicologia Clínica" }, { id: "estatistica", name: "Estatística" },
-  { id: "fisica", name: "Física I" }, { id: "scrum", name: "Scrum e Métodos Ágeis" }
-];
-
-const students = [
-  {
-    id: "laura",
-    initials: "LM",
-    name: "Laura Menezes",
-    course: "Engenharia Civil",
-    semester: "2º semestre",
-    bio: "Quero ganhar segurança em Cálculo I antes das próximas provas.",
-    subjects: ["calculo", "fisica"],
-    subjectLabels: ["Cálculo I", "Física I"],
-    interests: [{ type: "learn", label: "Quero aprender: Limites e derivadas" }],
-    tone: "teal",
-  },
-  {
-    id: "rafael",
-    initials: "RC",
-    name: "Rafael Costa",
-    course: "Análise e Desenvolvimento de Sistemas",
-    semester: "6º semestre",
-    bio: "Gosto de explicar programação e revisar matemática quando posso.",
-    subjects: ["algoritmos", "calculo"],
-    subjectLabels: ["Algoritmos", "Cálculo I"],
-    interests: [{ type: "help", label: "Posso ajudar: Limites e derivadas" }, { type: "learn", label: "Quero aprender: Integrais" }],
-    tone: "purple",
-  },
-  {
-    id: "camila",
-    initials: "CD",
-    name: "Camila Duarte",
-    course: "Administração",
-    semester: "4º semestre",
-    bio: "Organizo grupos objetivos para cada etapa do semestre.",
-    subjects: ["gestao", "estatistica"],
-    subjectLabels: ["Gestão de Projetos", "Estatística"],
-    interests: [{ type: "help", label: "Posso ajudar: Kanban" }],
-    tone: "purple",
-  },
-  {
-    id: "beatriz",
-    initials: "BA",
-    name: "Beatriz Almeida",
-    course: "Desenvolvimento de Jogos",
-    semester: "3º semestre",
-    bio: "Estou montando meu primeiro jogo e quero trocar ideias sobre lógica e design.",
-    subjects: ["jogos", "algoritmos"],
-    subjectLabels: ["Desenvolvimento de Jogos", "Algoritmos e Lógica"],
-    interests: [{ type: "learn", label: "Quero aprender: Unity e prototipação" }],
-    tone: "purple",
-  },
-  {
-    id: "lucas",
-    initials: "LS",
-    name: "Lucas Silva",
-    course: "Advocacia / Direito",
-    semester: "5º semestre",
-    bio: "Gosto de revisar casos e estudar Direito Civil em grupo.",
-    subjects: ["direito-civil", "constitucional"],
-    subjectLabels: ["Direito Civil", "Direito Constitucional"],
-    interests: [{ type: "help", label: "Posso ajudar: Direito Civil" }],
-    tone: "teal",
-  },
-  {
-    id: "mateus",
-    initials: "ML",
-    name: "Mateus Lima",
-    course: "Ciência da Computação",
-    semester: "3º semestre",
-    bio: "Aprendo melhor resolvendo exercícios em conjunto.",
-    subjects: ["algoritmos", "calculo"],
-    subjectLabels: ["Algoritmos", "Cálculo I"],
-    interests: [{ type: "learn", label: "Quero aprender: Funções" }, { type: "help", label: "Posso ajudar: Integrais" }],
-    tone: "teal",
-  },
-];
-
-const initialGroups = [
-  { id: "calculo", name: "Cálculo I sem mistério", subject: "Cálculo I", objective: "Resolver listas de limites e derivadas antes da P1.", owner: "Camila Duarte", members: 2, limit: 5 },
-  { id: "algoritmos", name: "Prática de algoritmos", subject: "Algoritmos", objective: "Treinar lógica e estruturas de repetição com desafios curtos.", owner: "Rafael Costa", members: 2, limit: 4 },
-];
+import { courses, subjects, students, initialGroups, directChatUsers, initialDirectMessages } from "./dados.js";
 
 const loadData = (key, fallback) => { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } };
 const saveData = (key, value) => localStorage.setItem(key, JSON.stringify(value));
@@ -103,18 +13,10 @@ let requests = loadData("studylink.requests", []);
 let chats = loadData("studylink.chats", {});
 let session = loadData("studylink.session", null);
 
-const directChatUsers = [
-  { id: "eduardo", name: "Eduardo Schwertz", initials: "ES", course: "Engenharia de Software", semester: "4º semestre", tone: "purple" },
-  { id: "laura", name: "Laura Menezes", initials: "LM", course: "Engenharia Civil", semester: "2º semestre", tone: "teal" },
-];
-const initialDirectMessages = [
-  { id: 1, senderId: "laura", text: "Oi, Eduardo! Vi que você pode ajudar com Scrum. Você também estuda Cálculo I?", time: "14:08" },
-  { id: 2, senderId: "eduardo", text: "Oi, Laura! Sim, estou revisando limites e derivadas esta semana. Podemos estudar juntos.", time: "14:10" },
-  { id: 3, senderId: "laura", text: "Ótimo! Tenho dificuldade justamente nas derivadas. Que tal começarmos pela lista 2?", time: "14:12" },
-];
 const directChatStorageKey = "studylink.direct-chat-v1";
 const validDirectMessages = (value) => Array.isArray(value) && value.every((message) => message && typeof message.text === "string" && directChatUsers.some((user) => user.id === message.senderId));
-let directMessages = validDirectMessages(loadData(directChatStorageKey, initialDirectMessages)) ? loadData(directChatStorageKey, initialDirectMessages) : [...initialDirectMessages];
+const savedMessages = loadData(directChatStorageKey, initialDirectMessages);
+let directMessages = validDirectMessages(savedMessages) ? savedMessages : [...initialDirectMessages];
 let activeDirectUserId = "eduardo";
 let directRecipient = null;
 let onlineDirectMessages = [];
@@ -292,36 +194,62 @@ function openDirectChat() {
 }
 
 function renderProfile() {
-  const panel = document.querySelector("#perfil .profile-panel");
-  const user = session;
-  const name = user?.name || "Seu perfil";
-  const value = (text) => escapeHTML(text || "Não informado");
-  const initials = user?.name ? user.name.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("") : "?";
-  panel.innerHTML = `<div class="profile-heading"><span class="avatar large purple">${escapeHTML(initials)}</span><div><p class="eyebrow">Seu perfil acadêmico</p><h2>${escapeHTML(name)}</h2><p>${user ? `${value(user.course)} · ${value(user.semester)}` : "Entre para ver seu perfil."}</p></div><button class="button button-secondary button-small" id="edit-profile">Editar perfil</button></div><div class="profile-grid"><div><h3>Faculdade</h3><p>${value(user?.university)}</p><h3>Disciplina</h3><p>${value(user?.subject)}</p></div><div><h3>Objetivo</h3><p>${value(user?.intent)}</p><h3>Maior dificuldade</h3><p>${value(user?.difficulty)}</p></div></div>${user?.bio ? `<p class="profile-description">${escapeHTML(user.bio)}</p>` : ""}`;
+  const user = session || {};
+  const missing = "Não informado";
+  document.querySelector("#profile-name").textContent = user.name || "Seu perfil";
+  document.querySelector("#profile-initials").textContent = user.name
+    ? user.name.trim().split(/\s+/).slice(0, 2).map(part => part[0]).join("")
+    : "?";
+  document.querySelector("#profile-course").textContent = session
+    ? `${user.course || missing} · ${user.semester || missing}`
+    : "Entre para ver seu perfil.";
+  for (const field of ["university", "subject", "intent", "difficulty"]) {
+    document.querySelector("#profile-" + field).textContent = user[field] || missing;
+  }
+  const bio = document.querySelector("#profile-bio");
+  bio.textContent = user.bio || "";
+  bio.hidden = !user.bio;
 }
 
-function profileFields(user = {}, required = true) {
-  const req = required ? "required" : "";
-  const input = (name, label, type = "text") => `<label>${label}<input name="${name}" type="${type}" value="${escapeHTML(user[name] || "")}" maxlength="100" ${req}></label>`;
-  return `${input("name", "Nome")}${input("university", "Faculdade")}${input("course", "Curso")}${input("subject", "Matéria de interesse")}${input("semester", "Semestre (ex.: 4º semestre)")}
-    <label>Você quer<select name="intent" ${req}><option value="">Selecione</option>${["Ensinar", "Aprender", "Ensinar e aprender"].map((v) => `<option ${user.intent === v ? "selected" : ""}>${v}</option>`).join("")}</select></label>${input("difficulty", "Matéria em que tem mais dificuldade")}`;
+function groupEntryButton(group, isMember, onlineRoom) {
+  const id = escapeHTML(group.id);
+  if (isMember) return `<button class="button button-primary" data-open-chat="${id}">Abrir chat</button>`;
+  if (group.members >= group.limit) return '<button class="button button-secondary" disabled>Grupo cheio</button>';
+  if (!onlineRoom) return `<button class="button button-primary" data-request-group="${id}">Solicitar participação</button>`;
+  if (group.visibility !== "private") return `<button class="button button-primary" data-join-online-room="${id}">Entrar no grupo</button>`;
+
+  const pending = myOnlineRequests.some(request => request.roomId === group.id && request.status === "Pendente");
+  if (pending) return '<button class="button button-primary" disabled>Solicitação enviada</button>';
+  return `<button class="button button-primary" data-request-online-room="${id}">Solicitar entrada</button>`;
+}
+
+function roomMembers(group, names = {}) {
+  let html = "<h3>Administrar membros</h3>";
+  for (const id of group.memberIds || []) {
+    const owner = id === group.ownerId;
+    const name = names[id] || group.memberNames?.[id] || (owner ? group.owner : "Membro");
+    const action = owner ? "<small>Organizador</small>"
+      : `<button class="button button-secondary button-small" data-remove-member="${escapeHTML(id)}" data-room-id="${escapeHTML(group.id)}">Remover</button>`;
+    html += `<div class="request-item"><span>${escapeHTML(name)}</span>${action}</div>`;
+  }
+  return html;
 }
 
 function openGroup(group) {
   const onlineRoom = firebaseReady && Boolean(group.ownerId);
   const isOwner = onlineRoom ? group.ownerId === session?.uid : group.ownerEmail === session?.email || (!group.ownerEmail && group.owner === (session?.name || "Eduardo Schwertz"));
-  const full = group.members >= group.limit;
   const userEmail = session?.email || "eduardo@studylink.local";
   const isMember = onlineRoom ? (group.memberIds || []).includes(session?.uid) : isOwner || requests.some((request) => request.groupId === group.id && request.email === userEmail && request.status === "Aprovada");
-  const pending = myOnlineRequests.some((request) => request.roomId === group.id && request.status === "Pendente");
-  const action = isMember ? `<button class="button button-primary" data-open-chat="${escapeHTML(group.id)}">Abrir chat</button>` : full ? '<button class="button button-secondary" disabled>Grupo cheio</button>' : onlineRoom ? group.visibility === "private" ? `<button class="button button-primary" data-request-online-room="${escapeHTML(group.id)}" ${pending ? "disabled" : ""}>${pending ? "Solicitação enviada" : "Solicitar entrada"}</button>` : `<button class="button button-primary" data-join-online-room="${escapeHTML(group.id)}">Entrar no grupo</button>` : `<button class="button button-primary" data-request-group="${escapeHTML(group.id)}">Solicitar participação</button>`;
-  const members = onlineRoom && isOwner ? `<div class="modal-section" data-member-list="${escapeHTML(group.id)}"><h3>Administrar membros</h3>${(group.memberIds || []).map((id) => `<div class="request-item"><span>${escapeHTML(group.memberNames?.[id] || (id === group.ownerId ? group.owner : "Membro"))}</span>${id !== group.ownerId ? `<button class="button button-secondary button-small" data-remove-member="${escapeHTML(id)}" data-room-id="${escapeHTML(group.id)}">Remover</button>` : "<small>Organizador</small>"}</div>`).join("")}</div>` : "";
+  const action = groupEntryButton(group, isMember, onlineRoom);
+  const members = onlineRoom && isOwner
+    ? `<div class="modal-section" data-member-list="${escapeHTML(group.id)}">${roomMembers(group)}</div>`
+    : "";
   showModal(`<span class="chip subject-chip">${escapeHTML(group.subject)}</span><h2 id="modal-title">${escapeHTML(group.name)}</h2><p>${escapeHTML(group.objective)}</p><div class="modal-section"><p>Organizado por ${escapeHTML(group.owner)} · ${group.members}/${group.limit} membros · ${group.visibility === "private" ? "Privado: entrada mediante aprovação" : "Público: entrada livre"}</p></div>${members}<div class="modal-actions">${action}${onlineRoom && isOwner ? `<button class="button button-secondary" data-delete-room="${escapeHTML(group.id)}">Excluir grupo</button>` : ""}<button class="button button-secondary" data-close-modal>Fechar</button></div>`);
   if (onlineRoom && isOwner && (group.memberIds || []).some((id) => !group.memberNames?.[id])) {
     getRoomMemberNames(group.memberIds).then((names) => {
       const element = modalContent.querySelector("[data-member-list]");
       if (!element || element.dataset.memberList !== group.id) return;
-      element.innerHTML = `<h3>Administrar membros</h3>${group.memberIds.map((id) => `<div class="request-item"><span>${escapeHTML(names[id] || group.memberNames?.[id] || "Membro")}</span>${id !== group.ownerId ? `<button class="button button-secondary button-small" data-remove-member="${escapeHTML(id)}" data-room-id="${escapeHTML(group.id)}">Remover</button>` : "<small>Organizador</small>"}</div>`).join("")}`;
+      element.innerHTML = roomMembers(group, names);
     }).catch(() => showToast("Não foi possível carregar os nomes dos membros."));
   }
 }
@@ -485,18 +413,50 @@ document.querySelector("#reset-direct-chat").addEventListener("click", () => {
 
 document.addEventListener("click", async (event) => {
   if (event.target.closest("[data-register]")) {
-    showModal(`<h2 id="modal-title">Criar conta</h2><form id="online-register-form" class="auth-form">${profileFields()}<label>E-mail<input name="email" type="email" required></label><label>Senha<input name="password" type="password" required minlength="6" autocomplete="new-password"></label><div class="modal-actions"><button class="button button-primary" type="submit">Criar conta</button></div></form>`); return;
+    showModal(`<h2 id="modal-title">Criar conta</h2><form id="online-register-form" class="auth-form">${document.querySelector("#academic-fields").innerHTML}<label>E-mail<input name="email" type="email" required></label><label>Senha<input name="password" type="password" required minlength="6" autocomplete="new-password"></label><div class="modal-actions"><button class="button button-primary" type="submit">Criar conta</button></div></form>`);
+    return;
   }
   const requestRoom = event.target.closest("[data-request-online-room]");
   const decisionOnline = event.target.closest("[data-online-decision]");
   const remove = event.target.closest("[data-remove-member]");
   const deleteRoom = event.target.closest("[data-delete-room]");
   try {
-    if (requestRoom) { if (!session?.uid) { showToast("Entre na sua conta para solicitar acesso."); return; } const group = groups.find((g) => g.id === requestRoom.dataset.requestOnlineRoom); await requestRoomAccess(group, session); closeModal(); showToast("Solicitação enviada ao organizador."); return; }
-    if (decisionOnline) { const request = incomingOnlineRequests.find((r) => r.id === decisionOnline.dataset.requestId); await decideRoomRequest(request, decisionOnline.dataset.onlineDecision === "approve"); showToast("Solicitação respondida."); return; }
-    if (remove) { if (!confirm("Remover esta pessoa do grupo?")) return; await removeRoomMember(remove.dataset.roomId, remove.dataset.removeMember); closeModal(); showToast("Pessoa removida do grupo."); return; }
-    if (deleteRoom) { if (!confirm("Excluir este grupo? Os membros perderão acesso ao chat.")) return; await deleteOnlineRoom(deleteRoom.dataset.deleteRoom); closeModal(); showToast("Grupo excluído."); return; }
-  } catch (error) { showToast(error.message || "Não foi possível concluir a ação."); return; }
+    if (requestRoom) {
+      if (!session?.uid) {
+        showToast("Entre na sua conta para solicitar acesso.");
+        return;
+      }
+      const group = groups.find(group => group.id === requestRoom.dataset.requestOnlineRoom);
+      await requestRoomAccess(group, session);
+      closeModal();
+      showToast("Solicitação enviada ao organizador.");
+      return;
+    }
+    if (decisionOnline) {
+      const request = incomingOnlineRequests.find(request => request.id === decisionOnline.dataset.requestId);
+      const approved = decisionOnline.dataset.onlineDecision === "approve";
+      await decideRoomRequest(request, approved);
+      showToast("Solicitação respondida.");
+      return;
+    }
+    if (remove) {
+      if (!confirm("Remover esta pessoa do grupo?")) return;
+      await removeRoomMember(remove.dataset.roomId, remove.dataset.removeMember);
+      closeModal();
+      showToast("Pessoa removida do grupo.");
+      return;
+    }
+    if (deleteRoom) {
+      if (!confirm("Excluir este grupo? Os membros perderão acesso ao chat.")) return;
+      await deleteOnlineRoom(deleteRoom.dataset.deleteRoom);
+      closeModal();
+      showToast("Grupo excluído.");
+      return;
+    }
+  } catch (error) {
+    showToast(error.message || "Não foi possível concluir a ação.");
+    return;
+  }
   const studentButton = event.target.closest("[data-open-student]");
   const groupButton = event.target.closest("[data-open-group]");
   const requestButton = event.target.closest("[data-request-group]");
@@ -529,10 +489,20 @@ document.addEventListener("click", async (event) => {
 
 modal.addEventListener("click", (event) => { if (event.target === modal) closeModal(); });
 document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !modal.hidden) closeModal(); });
-document.addEventListener("click", (event) => {
-  if (!event.target.closest("#edit-profile")) return;
-  if (!session || (firebaseReady && !session.uid)) { showToast("Entre na sua conta para editar o perfil."); return; }
-  showModal(`<h2 id="modal-title">Editar perfil</h2><form id="profile-form" class="auth-form">${profileFields(session)}<label>Sobre você<textarea name="bio" maxlength="180">${escapeHTML(session.bio || "")}</textarea></label><div class="modal-actions"><button class="button button-primary" type="submit">Salvar perfil</button></div></form>`);
+document.querySelector("#edit-profile").addEventListener("click", () => {
+  if (!session || (firebaseReady && !session.uid)) {
+    showToast("Entre na sua conta para editar o perfil.");
+    return;
+  }
+  showModal(`<h2 id="modal-title">Editar perfil</h2>
+    <form id="profile-form" class="auth-form">
+      ${document.querySelector("#academic-fields").innerHTML}
+      <label>Sobre você<textarea name="bio" maxlength="180"></textarea></label>
+      <div class="modal-actions"><button class="button button-primary" type="submit">Salvar perfil</button></div>
+    </form>`);
+  for (const field of modalContent.querySelectorAll("[name]")) {
+    field.value = session[field.name] || "";
+  }
 });
 
 function renderRequests() {
